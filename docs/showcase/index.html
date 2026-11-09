@@ -338,7 +338,7 @@
 <div class="wrap">
   <header class="topbar">
     <div class="mark"><i></i>校园食堂点评推荐</div>
-    <div class="status">M1 · MVP 开发中</div>
+    <div class="status">M1 · MVP 开发完成，待部署验证</div>
   </header>
 
   <section class="hero" aria-labelledby="hero-title">
@@ -347,7 +347,7 @@
     <p class="lede">面向大学生的食堂菜品级点评与推荐工具。评价对象精确到窗口和菜品，评价一次只要 5 秒，榜单按天更新。</p>
     <div class="cta-row">
       <a class="btn btn-primary" id="product-link" href="#" role="button" aria-disabled="true" tabindex="-1"><i></i>产品即将上线</a>
-      <span class="cta-note">线上地址部署后在此更新。接口文档随服务一起发布在 <code>/docs</code>。</span>
+      <span class="cta-note">前后端已可本地运行（<code>docker compose up</code> 一条命令）。公网地址部署后在此更新，接口文档随服务发布在 <code>/docs</code>。</span>
     </div>
 
     <div class="pillars" aria-label="三个核心取向">
@@ -384,7 +384,7 @@
     <p class="sub">MVP 的唯一目标是验证一个假设：学生愿意每天花 5 秒告诉别人“这顿饭怎么样”。评价行为跑不起来，推荐算法就没有数据基础。关注、私信、积分商城、外卖，这些都明确不做。</p>
     <div class="features">
       <article class="feature">
-        <h3>窗口列表 <small>GET /stalls</small></h3>
+        <h3>窗口列表 <small>GET /canteens/{id}/stalls</small></h3>
         <p>按食堂和楼层浏览所有窗口与常驻菜品，价格、辣度、是否素食一目了然。</p>
         <div class="demo" aria-label="窗口列表示例">
           <div class="row"><span class="name">二食堂 · 3F · 川味香锅</span><span class="meta">川菜</span></div>
@@ -394,7 +394,7 @@
       </article>
       <article class="feature">
         <h3>一键评价 <small>POST /reviews</small></h3>
-        <p>三选一，点一下就提交。可选附带一个预设标签，比如“分量少了”“换厨师了”。</p>
+        <p>三选一，点一下就算完成；随后 3 秒内可补最多 3 个预设标签，比如“份量少了”“换厨师了”。同一个人对同一道菜一天只能评一次。</p>
         <div class="demo" aria-label="一键评价示例">
           <div class="verdicts">
             <div class="verdict good">好评<small>+1.0</small></div>
@@ -404,7 +404,7 @@
         </div>
       </article>
       <article class="feature">
-        <h3>今日榜单 <small>GET /rankings</small></h3>
+        <h3>今日榜单 <small>GET /rankings/today</small></h3>
         <p>好评榜和踩雷榜各一份，每 10 分钟重算一次，只看最近 7 天的评价。</p>
         <div class="demo" aria-label="榜单示例">
           <div class="row"><span class="name"><span class="rank">1</span>番茄炒蛋 · 家常小炒</span><span class="chip good">好评榜</span></div>
@@ -414,7 +414,7 @@
       </article>
       <article class="feature">
         <h3>随机推荐 <small>GET /recommend/random</small></h3>
-        <p>解决选择困难。从近期评分不差的菜品里随机抽一个，可按预算和辣度过滤。</p>
+        <p>解决选择困难。按预算、辣度、素食过滤后，排除踩雷菜和黄牌窗口，再按分数加权随机抽一个主推加两个备选，不满意就“换一个”。</p>
         <div class="demo" aria-label="随机推荐示例">
           <div class="dice"><b>今天吃这个：豆浆 + 肉包</b><span>二食堂 1F · 早点窗口 · ¥4.50</span></div>
         </div>
@@ -494,7 +494,7 @@ score_7d = Σ(base_i × weight_i) / (Σ weight_i + <span class="k">2</span>)</pr
     <h2 id="road-title">先验证评价行为，再谈推荐算法</h2>
     <div class="timeline">
       <div class="ms done"><b>M0 · 种子</b><strong>菜品录入</strong><span>单食堂全部窗口菜品 CSV 导入</span></div>
-      <div class="ms now"><b>M1 · MVP</b><strong>验证评价行为</strong><span>窗口列表、一键评价、好评/踩雷榜、随机推荐、邮箱登录</span></div>
+      <div class="ms now"><b>M1 · MVP</b><strong>验证评价行为</strong><span>窗口列表、一键评价、好评/踩雷榜、随机推荐、邮箱登录 —— 已完成开发，117 个后端测试，待上线验证</span></div>
       <div class="ms"><b>M2 · 深化</b><strong>提升决策效率</strong><span>踩雷预警、价格追踪、情境过滤、混合搜索</span></div>
       <div class="ms"><b>M3 · 个性化</b><strong>千人千面</strong><span>协同过滤、评价语义聚合、新菜投稿与想吃投票</span></div>
       <div class="ms"><b>M4 · 扩展</b><strong>多食堂 / 多校区</strong><span>迁移 PostgreSQL + pgvector，食堂方周报</span></div>

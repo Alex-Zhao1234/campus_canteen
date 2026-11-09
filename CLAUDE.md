@@ -35,4 +35,5 @@
 - 已有：前端登录（`/login`，邮箱验证码，开发模式自动填入 `dev_code`，`?next=` 回跳）与一键评价 `components/RatingQuickBar.tsx`。状态机 idle → tagging(3 秒倒计时，最多 3 标签，点标签重置) → submitting → done；**取舍：表情点击只高亮，请求在标签窗口结束时一次性发出**（保持 review append-only，不需要 PATCH）。`hooks/useSubmitReview.ts` 乐观 +1 评价数 → 成功后用响应里的 `dish_stats` 覆盖 → settled 失效 stall/dish/rankings/myReviews。409 置 done 并提示；401 跳登录。全局提示 `stores/toast.ts` + `components/Toaster.tsx`。已嵌入窗口页每张菜品卡与菜品详情页。
 - 已有：随机推荐 `components/RandomPicker.tsx`（首页浮动按钮 → 底部抽屉；食堂/预算/辣度/素食 chip 存 `useUiStore` 持久化；`hooks/useRandomPick.ts` 不走缓存，`exclude` 累积已看过的 id，候选用尽清空重来）；我的评价（`/me`，`hooks/useMyReviews.ts` 列表 + 删除 mutation，乐观移除、settled 失效 stall/dish/rankings）。
 - **MVP 前后端四件事全部完成**。
-- 下一步：收尾——README 更新、展示页 `docs/showcase/index.html` 补真实截图与说明、部署方案（docker-compose）。之后进入 M2（预警 stall_alert、价格历史、评价流、搜索）。
+- 已有：Docker 化——`backend/Dockerfile`（python:3.12-slim + uv，`docker-entrypoint.sh` 先 migrate 再幂等 seed 再 uvicorn）、`frontend/Dockerfile`（多阶段：node 构建 → nginx 托管，`nginx.conf` 反代 `/api/` 到 `api:8000` + SPA 回退）、根目录 `docker-compose.yml`（api + web，`./data` 挂载到 `/app/data`，变量读根目录 `.env`），`make up/down/logs`。本机 WSL 未开 Docker Desktop 集成，镜像构建尚未实际验证。README 已重写。
+- 下一步：Docker 实际构建验证（用户开启 WSL 集成后 `make up`）→ 进入 M2（踩雷预警 stall_alert、价格历史、菜品页评价流、搜索）。

@@ -1,4 +1,4 @@
-.PHONY: setup dev-api dev-web test lint seed rankings migrate migration
+.PHONY: setup dev-api dev-web test lint seed rankings migrate migration up down logs
 
 setup:
 	./setup.sh
@@ -29,3 +29,13 @@ migrate:
 # 根据模型变更生成新迁移：make migration m="add_xxx"
 migration:
 	cd backend && .venv/bin/alembic revision --autogenerate -m "$(m)"
+
+# Docker：整套起停（需要 Docker Desktop 并开启 WSL 集成）
+up:
+	docker compose up --build -d
+
+down:
+	docker compose down
+
+logs:
+	docker compose logs -f

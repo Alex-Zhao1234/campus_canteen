@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+# Node
+node_modules/
+frontend/dist/
+# Data
+data/*.db
+data/*.db-wal
+data/*.db-shm
+data/images/
+# Env
+.env
+.env.local
+# IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.egg-info/
+frontend/tsconfig.tsbuildinfo

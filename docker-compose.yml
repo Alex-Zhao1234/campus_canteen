@@ -14,6 +14,7 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost}
       EMBEDDING_BACKEND: none
       SCHEDULER_ENABLED: "true"
+      SEED_DEMO_REVIEWS: ${SEED_DEMO_REVIEWS:-false}   # 演示：空库时写入一批演示评价
       RANKING_INTERVAL_MINUTES: ${RANKING_INTERVAL_MINUTES:-10}
     restart: unless-stopped
 

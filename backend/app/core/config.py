@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:5173"
     # 定时任务：榜单重算间隔；测试/脚本环境可关掉调度器
     scheduler_enabled: bool = True
+    # 演示环境：评价表为空时启动写入一批演示评价（Render 免费实例休眠后数据清空）
+    seed_demo_reviews: bool = False
     # 单容器部署：前端构建产物目录，非空则由 FastAPI 托管并做 SPA 回退
     static_dir: str | None = None
     ranking_interval_minutes: int = 10

@@ -25,3 +25,5 @@ services:
         value: "10"
       - key: EMBEDDING_BACKEND
         value: none
+      - key: SEED_DEMO_REVIEWS
+        value: "true"         # 评价表为空时写入演示评价，榜单一打开就有内容

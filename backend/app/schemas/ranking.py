@@ -15,6 +15,7 @@ class RankingItemOut(BaseModel):
     canteen_id: int
     canteen_name: str
     price_cents: int
+    image_url: str | None = None
     score: float
     review_count_7d: int
     delta: int | None

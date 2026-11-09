@@ -4,6 +4,7 @@ import { useCanteens, useRanking } from "@/hooks/queries";
 import { useUiStore } from "@/stores/ui";
 import { RandomPicker } from "@/components/RandomPicker";
 import { ScoreBadge } from "@/components/ScoreBadge";
+import { Thumb } from "@/components/Thumb";
 import { Empty, ErrorState, Loading } from "@/components/State";
 import { formatPrice, formatTime } from "@/lib/format";
 import type { RankingType } from "@/types/api";
@@ -58,6 +59,7 @@ export function Home() {
             <li key={it.dish_id}>
               <Link to={`/dish/${it.dish_id}`} className="rank-row">
                 <span className={`rank-no ${it.rank <= 3 ? "top" : ""}`}>{it.rank}</span>
+                <Thumb src={it.image_url} alt={it.dish_name} />
                 <span className="rank-main">
                   <strong>{it.dish_name}</strong>
                   <small>

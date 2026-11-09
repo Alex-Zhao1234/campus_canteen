@@ -43,6 +43,7 @@ class RankingService:
                     canteen_id=canteen.id,
                     canteen_name=canteen.name,
                     price_cents=dish.price_cents,
+                    image_url=dish.image_url,
                     score=entry["score"],
                     review_count_7d=entry["review_count_7d"],
                     delta=entry["delta"],

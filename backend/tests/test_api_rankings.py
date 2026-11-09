@@ -71,6 +71,7 @@ async def test_today_good_ranking_campus_wide(client, snapshot):
         "canteen_id": snapshot["c2"],
         "canteen_name": "二食堂",
         "price_cents": 1800,
+        "image_url": None,
         "score": pytest.approx(1 / 3),
         "review_count_7d": 1,
         "delta": None,

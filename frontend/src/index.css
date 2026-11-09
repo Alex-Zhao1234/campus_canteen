@@ -195,3 +195,10 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 }
 .dish-photo.placeholder { display: grid; place-items: center; font-size: 2.2rem; color: var(--muted); }
 @media (max-width: 360px) { .dish-photo { width: 6rem; height: 6rem; } }
+
+/* ---------- 列表缩略图 ---------- */
+.thumb {
+  flex: none; width: 3.5rem; height: 3.5rem; border-radius: .65rem; object-fit: cover;
+  background: color-mix(in srgb, var(--fg) 6%, transparent);
+}
+.thumb.placeholder { display: grid; place-items: center; font-size: 1.4rem; opacity: .6; }

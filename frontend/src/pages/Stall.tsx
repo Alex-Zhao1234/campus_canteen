@@ -2,6 +2,7 @@ import { Link, useParams } from "react-router-dom";
 import { useStall } from "@/hooks/queries";
 import { RatingQuickBar } from "@/components/RatingQuickBar";
 import { ScoreBadge } from "@/components/ScoreBadge";
+import { Thumb } from "@/components/Thumb";
 import { Empty, ErrorState, Loading } from "@/components/State";
 import { formatPrice, formatSpicy } from "@/lib/format";
 
@@ -24,6 +25,7 @@ export function Stall() {
         {data.dishes.map((d) => (
           <li key={d.id} className="dish-item">
             <Link to={`/dish/${d.id}`} className="card">
+              <Thumb src={d.image_url} alt={d.name} />
               <span className="card-main">
                 <strong>{d.name}</strong>
                 <small>

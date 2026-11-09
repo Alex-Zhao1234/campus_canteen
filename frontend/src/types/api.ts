@@ -70,6 +70,7 @@ export interface RankingItem {
   canteen_id: number;
   canteen_name: string;
   price_cents: number;
+  image_url: string | null;
   score: number;
   review_count_7d: number;
   delta: number | null;

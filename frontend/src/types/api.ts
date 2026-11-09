@@ -94,3 +94,54 @@ export interface TokenPair {
   token_type: "bearer";
   user: User;
 }
+
+/* ---------- 认证 ---------- */
+
+export interface SendCodeOut {
+  sent: boolean;
+  /** 开发模式（AUTH_ECHO_CODE=true）后端直接回传验证码 */
+  dev_code: string | null;
+}
+
+export interface AccessTokenOut {
+  access_token: string;
+  token_type: "bearer";
+}
+
+/* ---------- 评价 ---------- */
+
+export type Verdict = "good" | "ok" | "bad";
+export type MealSlot = "breakfast" | "lunch" | "dinner" | "night";
+
+export interface Tag {
+  code: string;
+  label: string;
+  category: string;
+}
+
+export interface ReviewCreateIn {
+  dish_id: number;
+  verdict: Verdict;
+  tag_codes?: string[];
+  comment?: string | null;
+  meal_slot?: MealSlot | null;
+}
+
+export interface ReviewCreated {
+  review_id: number;
+  dish_id: number;
+  dish_stats: DishStats;
+}
+
+export interface MyReview {
+  id: number;
+  dish_id: number;
+  dish_name: string;
+  stall_id: number;
+  stall_name: string;
+  verdict: Verdict;
+  comment: string | null;
+  meal_slot: MealSlot | null;
+  tags: Tag[];
+  created_at: string;
+}

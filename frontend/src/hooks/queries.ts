@@ -2,6 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { orgApi } from "@/api/org";
 import { rankingsApi } from "@/api/rankings";
+import { reviewsApi } from "@/api/reviews";
 import type { RankingType } from "@/types/api";
 
 export const keys = {
@@ -10,6 +11,8 @@ export const keys = {
   stall: (stallId: number) => ["stall", stallId] as const,
   dish: (dishId: number) => ["dish", dishId] as const,
   rankings: ["rankings"] as const,
+  tags: ["tags"] as const,
+  myReviews: ["me", "reviews"] as const,
   ranking: (type: RankingType, canteenId: number | null) =>
     ["rankings", type, canteenId] as const,
 };
@@ -31,3 +34,6 @@ export const useRanking = (type: RankingType, canteenId: number | null) =>
     queryKey: keys.ranking(type, canteenId),
     queryFn: () => rankingsApi.today(type, canteenId),
   });
+
+export const useTags = () =>
+  useQuery({ queryKey: keys.tags, queryFn: reviewsApi.tags, staleTime: 60 * 60 * 1000 });

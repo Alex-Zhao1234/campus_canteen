@@ -1,5 +1,6 @@
 import { Link, useParams } from "react-router-dom";
 import { useStall } from "@/hooks/queries";
+import { RatingQuickBar } from "@/components/RatingQuickBar";
 import { ScoreBadge } from "@/components/ScoreBadge";
 import { Empty, ErrorState, Loading } from "@/components/State";
 import { formatPrice, formatSpicy } from "@/lib/format";
@@ -21,7 +22,7 @@ export function Stall() {
       {data.dishes.length === 0 && <Empty>这个窗口还没有菜品</Empty>}
       <ul className="cards">
         {data.dishes.map((d) => (
-          <li key={d.id}>
+          <li key={d.id} className="dish-item">
             <Link to={`/dish/${d.id}`} className="card">
               <span className="card-main">
                 <strong>{d.name}</strong>
@@ -34,7 +35,7 @@ export function Stall() {
                 <ScoreBadge score={d.stats.score_7d} count={d.stats.review_count_7d} />
               </span>
             </Link>
-            {/* 第二步：这里放 <RatingQuickBar /> 一键评价 */}
+            <RatingQuickBar dishId={d.id} stallId={data.id} dishName={d.name} />
           </li>
         ))}
       </ul>

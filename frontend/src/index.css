@@ -97,3 +97,57 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .stats dl { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .25rem; margin: 0; text-align: center; }
 .stats dt { grid-row: 2; font-size: .75rem; color: var(--muted); }
 .stats dd { grid-row: 1; margin: 0; font-size: 1.25rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* ---------- 一键评价 ---------- */
+.dish-item { display: flex; flex-direction: column; gap: .35rem; }
+.quickbar { padding: 0 .25rem; }
+.verdicts { display: flex; align-items: center; gap: .5rem; }
+.verdict {
+  display: flex; align-items: center; gap: .3rem; padding: .35rem .8rem; border-radius: 999px; font-size: .85rem;
+  background: color-mix(in srgb, var(--fg) 6%, transparent); transition: transform .1s, background .15s;
+}
+.verdict:active { transform: scale(.95); }
+.verdict span { font-size: 1.1rem; }
+.verdict.picked.good { background: color-mix(in srgb, var(--good) 18%, transparent); color: var(--good); font-weight: 600; }
+.verdict.picked.ok { background: color-mix(in srgb, var(--muted) 20%, transparent); font-weight: 600; }
+.verdict.picked.bad { background: color-mix(in srgb, var(--bad) 18%, transparent); color: var(--bad); font-weight: 600; }
+.verdict.dim { opacity: .4; }
+.verdict:disabled { cursor: default; }
+.quickbar-done { margin-left: auto; font-size: .8rem; color: var(--muted); }
+.dish-rate { margin-top: 1.25rem; }
+
+/* 底部抽屉 */
+.sheet-backdrop { position: fixed; inset: 0; z-index: 20; background: rgba(0,0,0,.35); display: flex; align-items: flex-end; }
+.sheet {
+  position: relative; width: 100%; max-width: 640px; margin: 0 auto; overflow: hidden;
+  padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom)); border-radius: 1.25rem 1.25rem 0 0;
+  background: var(--bg); animation: slide-up .2s ease-out;
+}
+@keyframes slide-up { from { transform: translateY(100%); } }
+.sheet-head { display: flex; flex-direction: column; gap: .2rem; margin-bottom: .85rem; }
+.sheet-head small { color: var(--muted); }
+.tags { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; }
+.tag { padding: .4rem .85rem; border-radius: 999px; font-size: .9rem; background: color-mix(in srgb, var(--fg) 7%, transparent); }
+.tag.on { background: var(--accent); color: #fff; }
+.sheet-actions { display: flex; gap: .5rem; }
+.sheet-actions button { flex: 1; }
+.progress { position: absolute; left: 0; bottom: 0; height: 3px; background: var(--accent); animation: shrink linear forwards; }
+@keyframes shrink { from { width: 100%; } to { width: 0; } }
+
+/* ---------- 按钮 / 表单 / toast ---------- */
+.primary { padding: .7rem 1rem; border-radius: .75rem; background: var(--accent); color: #fff; font-weight: 600; text-align: center; }
+.primary:disabled { opacity: .6; cursor: default; }
+.ghost { padding: .7rem 1rem; border-radius: .75rem; background: color-mix(in srgb, var(--fg) 7%, transparent); text-align: center; }
+.block { display: block; width: 100%; margin-top: .75rem; }
+.form { display: flex; flex-direction: column; gap: .75rem; }
+.form label { display: flex; flex-direction: column; gap: .35rem; font-size: .9rem; color: var(--muted); }
+.form input {
+  padding: .7rem .85rem; border-radius: .75rem; font: inherit; font-size: 1rem; color: var(--fg);
+  background: color-mix(in srgb, var(--fg) 5%, transparent); border: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
+}
+.form input:focus { outline: 2px solid var(--accent); outline-offset: 0; }
+.hint { color: var(--accent); }
+.toaster { position: fixed; top: calc(3.5rem + env(safe-area-inset-top)); left: 0; right: 0; z-index: 30; display: flex; flex-direction: column; align-items: center; gap: .5rem; pointer-events: none; padding: 0 1rem; }
+.toast { pointer-events: auto; max-width: 100%; padding: .6rem 1rem; border-radius: .75rem; background: var(--fg); color: var(--bg); font-size: .9rem; box-shadow: 0 4px 16px rgba(0,0,0,.2); animation: slide-down .2s ease-out; }
+.toast-good { background: var(--good); color: #fff; } .toast-bad { background: var(--bad); color: #fff; }
+@keyframes slide-down { from { transform: translateY(-8px); opacity: 0; } }

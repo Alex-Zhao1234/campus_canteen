@@ -1,5 +1,6 @@
 import { Link, useParams } from "react-router-dom";
 import { useDish } from "@/hooks/queries";
+import { RatingQuickBar } from "@/components/RatingQuickBar";
 import { ScoreBadge } from "@/components/ScoreBadge";
 import { ErrorState, Loading } from "@/components/State";
 import { formatPrice, formatSpicy } from "@/lib/format";
@@ -37,7 +38,11 @@ export function Dish() {
           <dd>{s.review_count_all}</dd>
         </dl>
       </section>
-      {/* 第二步：一键评价；第三步之后：评价流 */}
+      <section className="dish-rate">
+        <h3 className="section-title">你觉得怎么样？</h3>
+        <RatingQuickBar dishId={data.id} stallId={data.stall.id} dishName={data.name} />
+      </section>
+      {/* 第三步之后：评价流 */}
     </>
   );
 }

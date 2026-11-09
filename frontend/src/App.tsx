@@ -6,6 +6,7 @@ import { Canteen } from "@/pages/Canteen";
 import { Stall } from "@/pages/Stall";
 import { Dish } from "@/pages/Dish";
 import { Me } from "@/pages/Me";
+import { Login } from "@/pages/Login";
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
         <Route path="/stall/:id" element={<Stall />} />
         <Route path="/dish/:id" element={<Dish />} />
         <Route path="/me" element={<Me />} />
+        <Route path="/login" element={<Login />} />
       </Route>
     </Routes>
   );

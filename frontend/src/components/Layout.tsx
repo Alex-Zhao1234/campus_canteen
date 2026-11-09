@@ -1,4 +1,5 @@
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { Toaster } from "@/components/Toaster";
 
 const tabs = [
   { to: "/", label: "首页", icon: "🏠" },
@@ -23,6 +24,7 @@ export function Layout() {
       <main className="content">
         <Outlet />
       </main>
+      <Toaster />
       <nav className="tabbar">
         {tabs.map((t) => (
           <NavLink key={t.to} to={t.to} end className={({ isActive }) => (isActive ? "tab active" : "tab")}>

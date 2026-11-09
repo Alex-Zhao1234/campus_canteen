@@ -151,6 +151,22 @@ export interface MyReview {
   created_at: string;
 }
 
+/** 菜品评论区的一条评价；comment 为 null 表示用户只点了表情没写字 */
+export interface DishReview {
+  id: number;
+  user_nickname: string;
+  verdict: Verdict;
+  comment: string | null;
+  tags: Tag[];
+  created_at: string;
+  is_mine: boolean;
+}
+
+export interface DishReviewPage {
+  items: DishReview[];
+  next_before_id: number | null;
+}
+
 /* ---------- 随机推荐 ---------- */
 
 export interface RecommendItem {

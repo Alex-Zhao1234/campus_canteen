@@ -52,7 +52,7 @@ export function useSubmitReview(stallId: number, dishId: number) {
 
     onSettled: () => {
       qc.invalidateQueries({ queryKey: stallKey });
-      qc.invalidateQueries({ queryKey: dishKey });
+      qc.invalidateQueries({ queryKey: dishKey }); // 前缀匹配，连带失效评论区
       qc.invalidateQueries({ queryKey: keys.rankings });
       qc.invalidateQueries({ queryKey: keys.myReviews });
     },

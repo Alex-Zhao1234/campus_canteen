@@ -48,6 +48,21 @@ class ReviewRepository:
         )
         return [tuple(row) for row in (await self.session.execute(stmt)).all()]
 
+    async def list_dish_reviews(
+        self, dish_id: int, limit: int, before_id: int | None
+    ) -> list[tuple[Review, User]]:
+        """菜品评论区：未隐藏评价按 id 倒序（id 单调递增，等价于时间倒序），游标 before_id。"""
+        stmt = (
+            select(Review, User)
+            .join(User, User.id == Review.user_id)
+            .where(Review.dish_id == dish_id, Review.is_hidden.is_(False))
+            .order_by(Review.id.desc())
+            .limit(limit)
+        )
+        if before_id is not None:
+            stmt = stmt.where(Review.id < before_id)
+        return [tuple(row) for row in (await self.session.execute(stmt)).all()]
+
     async def _events(self, where) -> list[ReviewEvent]:
         stmt = (
             select(Review.verdict, Review.created_at, User.trust_score)

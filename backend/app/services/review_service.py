@@ -14,6 +14,8 @@ from app.recommender.stats import compute_dish_metrics, compute_stall_metrics
 from app.repositories.review_repo import ReviewRepository
 from app.schemas.org import DishStatsOut
 from app.schemas.review import (
+    DishReviewOut,
+    DishReviewPageOut,
     MyReviewOut,
     ReviewCreatedOut,
     ReviewCreateIn,
@@ -108,6 +110,29 @@ class ReviewService:
             )
             for r, d in rows
         ]
+
+    async def list_for_dish(
+        self, dish_id: int, viewer: User | None, limit: int, before_id: int | None
+    ) -> DishReviewPageOut:
+        """菜品评论区。多取一条判断是否还有下一页。"""
+        if await self.repo.get_active_dish(dish_id) is None:
+            raise NotFoundError("菜品", dish_id)
+        rows = await self.repo.list_dish_reviews(dish_id, limit + 1, before_id)
+        has_more = len(rows) > limit
+        rows = rows[:limit]
+        items = [
+            DishReviewOut(
+                id=r.id,
+                user_nickname=u.nickname,
+                verdict=r.verdict,
+                comment=r.comment,
+                tags=[TagOut.model_validate(t) for t in r.tags],
+                created_at=r.created_at,
+                is_mine=viewer is not None and r.user_id == viewer.id,
+            )
+            for r, u in rows
+        ]
+        return DishReviewPageOut(items=items, next_before_id=items[-1].id if has_more else None)
 
     async def _refresh_stats(self, dish_id: int, stall_id: int, now: datetime) -> DishStatsOut:
         dish_metrics = compute_dish_metrics(await self.repo.events_for_dish(dish_id), now)

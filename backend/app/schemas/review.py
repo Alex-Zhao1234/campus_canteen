@@ -50,3 +50,20 @@ class MyReviewOut(BaseModel):
     meal_slot: str | None
     tags: list[TagOut]
     created_at: datetime
+
+
+class DishReviewOut(BaseModel):
+    """菜品评论区的一条评价。comment 为空表示用户只点了表情没写字。"""
+
+    id: int
+    user_nickname: str
+    verdict: str
+    comment: str | None
+    tags: list[TagOut]
+    created_at: datetime
+    is_mine: bool
+
+
+class DishReviewPageOut(BaseModel):
+    items: list[DishReviewOut]
+    next_before_id: int | None  # 还有更多时给出下一页游标，否则 None

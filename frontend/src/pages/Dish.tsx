@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useDish } from "@/hooks/queries";
-import { RatingQuickBar } from "@/components/RatingQuickBar";
+import { CommentComposer } from "@/components/CommentComposer";
+import { ReviewList } from "@/components/ReviewList";
 import { ScoreBadge } from "@/components/ScoreBadge";
 import { ErrorState, Loading } from "@/components/State";
 import { formatPrice, formatSpicy } from "@/lib/format";
@@ -58,10 +59,10 @@ export function Dish() {
         </dl>
       </section>
       <section className="dish-rate">
-        <h3 className="section-title">你觉得怎么样？</h3>
-        <RatingQuickBar dishId={data.id} stallId={data.stall.id} dishName={data.name} />
+        <h3 className="section-title">评论区</h3>
+        <CommentComposer dishId={data.id} stallId={data.stall.id} dishName={data.name} />
+        <ReviewList dishId={data.id} stallId={data.stall.id} />
       </section>
-      {/* 第三步之后：评价流 */}
     </>
   );
 }

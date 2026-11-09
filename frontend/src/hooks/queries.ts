@@ -1,5 +1,5 @@
 /** 服务端状态都走这里。queryKey 集中定义，评价提交后按键失效缓存。 */
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { orgApi } from "@/api/org";
 import { rankingsApi } from "@/api/rankings";
 import { reviewsApi } from "@/api/reviews";
@@ -10,6 +10,7 @@ export const keys = {
   stalls: (canteenId: number) => ["stalls", canteenId] as const,
   stall: (stallId: number) => ["stall", stallId] as const,
   dish: (dishId: number) => ["dish", dishId] as const,
+  dishReviews: (dishId: number) => ["dish", dishId, "reviews"] as const,
   rankings: ["rankings"] as const,
   tags: ["tags"] as const,
   myReviews: ["me", "reviews"] as const,
@@ -37,3 +38,12 @@ export const useRanking = (type: RankingType, canteenId: number | null) =>
 
 export const useTags = () =>
   useQuery({ queryKey: keys.tags, queryFn: reviewsApi.tags, staleTime: 60 * 60 * 1000 });
+
+/** 菜品评论区：游标分页，next_before_id 为 null 表示到底了 */
+export const useDishReviews = (dishId: number) =>
+  useInfiniteQuery({
+    queryKey: keys.dishReviews(dishId),
+    queryFn: ({ pageParam }) => reviewsApi.forDish(dishId, pageParam),
+    initialPageParam: null as number | null,
+    getNextPageParam: (last) => last.next_before_id,
+  });

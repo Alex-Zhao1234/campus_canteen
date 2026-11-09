@@ -9,11 +9,18 @@ export function useMyReviews() {
   return useQuery({ queryKey: keys.myReviews, queryFn: reviewsApi.mine, enabled: !!token });
 }
 
-/** 删除（后端软删）：乐观从列表移除，失败回滚，成功后失效相关缓存让分数回落。 */
+/** 删除所需的最少信息；MyReview 直接满足，评论区条目补上 dish_id / stall_id 即可 */
+export interface ReviewRef {
+  id: number;
+  dish_id: number;
+  stall_id: number;
+}
+
+/** 删除（后端软删）：乐观从"我的评价"移除，失败回滚，成功后失效相关缓存让分数回落、评论区刷新。 */
 export function useDeleteReview() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (review: MyReview) => reviewsApi.remove(review.id),
+    mutationFn: (review: ReviewRef) => reviewsApi.remove(review.id),
     onMutate: async (review) => {
       await qc.cancelQueries({ queryKey: keys.myReviews });
       const prev = qc.getQueryData<MyReview[]>(keys.myReviews);

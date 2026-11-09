@@ -185,6 +185,33 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .link-btn { color: var(--bad); font-size: .85rem; padding: .25rem; }
 .link-btn:disabled { opacity: .5; }
 
+/* ---------- 菜品评论区 ---------- */
+.composer { display: flex; flex-direction: column; gap: .5rem; margin-bottom: 1rem; }
+.composer-input {
+  width: 100%; resize: vertical; min-height: 4.5rem; padding: .7rem .85rem; border-radius: .75rem;
+  font: inherit; font-size: 1rem; color: var(--fg); background: color-mix(in srgb, var(--fg) 5%, transparent);
+  border: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
+}
+.composer-input:focus { outline: 2px solid var(--accent); outline-offset: 0; }
+.composer-row { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.verdict-row { display: flex; gap: .35rem; flex: 1; }
+.verdict.small { padding: .35rem .6rem; font-size: .8rem; gap: .25rem; }
+.verdict.small span { font-size: .95rem; }
+.composer-count { font-size: .75rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.primary.small { padding: .45rem .9rem; font-size: .9rem; }
+.comments { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .5rem; }
+.comment { padding: .75rem .9rem; border-radius: .9rem; background: color-mix(in srgb, var(--fg) 4%, transparent); }
+.comment-head { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.comment-head strong { font-size: .9rem; }
+.comment-head small { color: var(--muted); font-size: .75rem; }
+.comment-head .link-btn { margin-left: auto; }
+.verdict-mark { font-size: .75rem; padding: .1rem .5rem; border-radius: 999px; font-weight: 600; }
+.verdict-mark.good { color: var(--good); background: color-mix(in srgb, var(--good) 14%, transparent); }
+.verdict-mark.ok { color: var(--muted); background: color-mix(in srgb, var(--muted) 18%, transparent); }
+.verdict-mark.bad { color: var(--bad); background: color-mix(in srgb, var(--bad) 14%, transparent); }
+.comment-text { margin: .4rem 0 0; font-size: .95rem; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+.comment-text.muted { color: var(--muted); font-style: italic; font-size: .85rem; }
+
 /* ---------- 菜品配图 ---------- */
 .dish-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
 .dish-head-text { min-width: 0; flex: 1; }

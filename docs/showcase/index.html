@@ -1,0 +1,606 @@
+<title>校园食堂点评推荐</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=ZCOOL+XiaoWei&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #f7f6f3;
+    --surface: #ffffff;
+    --ink: #1c1b18;
+    --ink-2: #4a473f;
+    --muted: #76715f;
+    --line: #e4e1d8;
+    --line-strong: #cfcbc0;
+    --accent: #d9472b;
+    --accent-ink: #ffffff;
+    --accent-soft: #fbe9e4;
+    --good: #2f8f5b;
+    --good-soft: #e3f3ea;
+    --ok: #8a8578;
+    --ok-soft: #eeece6;
+    --bad: #c93a1f;
+    --bad-soft: #fbe5df;
+    --code-bg: #f0eee8;
+    --grid: #e9e6de;
+    --shadow: 0 1px 2px rgba(28, 27, 24, 0.06), 0 8px 24px -16px rgba(28, 27, 24, 0.25);
+    --font-display: "ZCOOL XiaoWei", "Noto Serif SC", "Songti SC", "SimSun", serif;
+    --font-body: "Noto Sans SC", -apple-system, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #161614;
+      --surface: #1f1f1c;
+      --ink: #ecebe6;
+      --ink-2: #c9c6bd;
+      --muted: #a09c90;
+      --line: #2f2e2a;
+      --line-strong: #43423c;
+      --accent: #ff6a47;
+      --accent-ink: #1a0e0a;
+      --accent-soft: #3a211b;
+      --good: #5cc48a;
+      --good-soft: #1e3328;
+      --ok: #a8a394;
+      --ok-soft: #2b2a26;
+      --bad: #ff7a5c;
+      --bad-soft: #3d2019;
+      --code-bg: #24241f;
+      --grid: #2a2a26;
+      --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 8px 24px -16px rgba(0,0,0,0.7);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #161614;
+    --surface: #1f1f1c;
+    --ink: #ecebe6;
+    --ink-2: #c9c6bd;
+    --muted: #a09c90;
+    --line: #2f2e2a;
+    --line-strong: #43423c;
+    --accent: #ff6a47;
+    --accent-ink: #1a0e0a;
+    --accent-soft: #3a211b;
+    --good: #5cc48a;
+    --good-soft: #1e3328;
+    --ok: #a8a394;
+    --ok-soft: #2b2a26;
+    --bad: #ff7a5c;
+    --bad-soft: #3d2019;
+    --code-bg: #24241f;
+    --grid: #2a2a26;
+    --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 8px 24px -16px rgba(0,0,0,0.7);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 880px;
+    margin: 0 auto;
+    padding-inline: clamp(16px, 5vw, 40px);
+    padding-block: 0 72px;
+  }
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  /* 顶栏 */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding-block: 20px 0;
+    font-size: 13px; color: var(--muted);
+  }
+  .topbar .mark { display: flex; align-items: center; gap: 10px; color: var(--ink); font-weight: 500; }
+  .topbar .mark i {
+    display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+    background: var(--accent);
+  }
+  .topbar .status { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.04em; }
+
+  /* 首屏 */
+  .hero { padding-block: 64px 40px; }
+  .eyebrow {
+    font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--muted); font-weight: 500; margin: 0 0 14px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .eyebrow::before { content: ""; width: 20px; height: 1px; background: var(--line-strong); }
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(2.1rem, 6.5vw, 3.4rem);
+    line-height: 1.22;
+    letter-spacing: 0.01em;
+    margin: 0 0 20px;
+    text-wrap: balance;
+    max-width: 18em;
+  }
+  h1 em { font-style: normal; color: var(--accent); }
+  .lede {
+    font-size: clamp(1.05rem, 2.2vw, 1.2rem);
+    color: var(--ink-2);
+    max-width: 34em;
+    margin: 0 0 32px;
+    text-wrap: pretty;
+  }
+  .cta-row { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 20px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 12px 22px; border-radius: 6px;
+    font-weight: 500; font-size: 15px; text-decoration: none;
+    border: 1px solid transparent;
+    cursor: pointer; font-family: inherit;
+  }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); }
+  .btn-primary[aria-disabled="true"] {
+    background: var(--ok-soft); color: var(--muted); border-color: var(--line-strong);
+    cursor: not-allowed;
+  }
+  .btn-primary[aria-disabled="true"] i {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--muted); opacity: .7;
+  }
+  .cta-note { font-size: 13px; color: var(--muted); }
+  .cta-note code { font-family: var(--font-mono); font-size: 12px; }
+
+  .pillars {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;
+    border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+    margin-top: 48px;
+  }
+  .pillar { padding: 20px 20px 22px; border-left: 1px solid var(--line); }
+  .pillar:first-child { border-left: 0; padding-left: 0; }
+  .pillar b {
+    display: block; font-family: var(--font-display); font-weight: 400;
+    font-size: 1.6rem; line-height: 1.2; color: var(--ink); margin-bottom: 6px;
+  }
+  .pillar span { font-size: 14px; color: var(--muted); }
+
+  /* 通用章节 */
+  section { padding-block: 56px 0; }
+  h2 {
+    font-family: var(--font-display); font-weight: 400;
+    font-size: clamp(1.5rem, 3.4vw, 2rem); line-height: 1.3;
+    margin: 0 0 12px; text-wrap: balance;
+  }
+  .sub { color: var(--ink-2); margin: 0 0 28px; max-width: 38em; text-wrap: pretty; }
+  p { margin: 0; }
+
+  /* 对比表 */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+  table.compare { width: 100%; border-collapse: collapse; font-size: 15px; min-width: 560px; }
+  table.compare th, table.compare td { padding: 13px 16px; text-align: left; vertical-align: top; }
+  table.compare thead th {
+    font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 500;
+    color: var(--muted); border-bottom: 1px solid var(--line-strong); background: var(--bg);
+  }
+  table.compare tbody tr + tr td, table.compare tbody tr + tr th { border-top: 1px solid var(--line); }
+  table.compare tbody th { font-weight: 500; color: var(--muted); width: 18%; white-space: nowrap; }
+  table.compare td.them { color: var(--ink-2); }
+  table.compare td.us { font-weight: 500; }
+  table.compare td.us .hl { color: var(--accent); }
+
+  /* MVP 四件事 */
+  .features { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .feature {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+    padding: 22px 22px 24px; display: flex; flex-direction: column; gap: 12px;
+  }
+  .feature h3 { margin: 0; font-size: 1.1rem; font-weight: 500; display: flex; align-items: baseline; gap: 10px; }
+  .feature h3 small { font-family: var(--font-mono); font-size: 11px; color: var(--muted); letter-spacing: 0.06em; }
+  .feature p { color: var(--ink-2); font-size: 15px; }
+  .demo {
+    margin-top: 4px; border: 1px dashed var(--line-strong); border-radius: 6px;
+    padding: 12px 14px; font-size: 14px; background: var(--bg);
+  }
+  .demo .row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 5px 0; }
+  .demo .row + .row { border-top: 1px solid var(--line); }
+  .demo .name { color: var(--ink); }
+  .demo .meta { color: var(--muted); font-size: 12px; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .verdicts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .verdict {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    padding: 10px 6px; border-radius: 6px; border: 1px solid var(--line);
+    font-size: 14px; font-weight: 500; background: var(--surface);
+  }
+  .verdict small { font-family: var(--font-mono); font-size: 11px; font-weight: 400; color: var(--muted); }
+  .verdict.good { color: var(--good); background: var(--good-soft); border-color: transparent; }
+  .verdict.ok { color: var(--ok); background: var(--ok-soft); border-color: transparent; }
+  .verdict.bad { color: var(--bad); background: var(--bad-soft); border-color: transparent; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px; padding: 1px 8px; border-radius: 999px;
+    font-size: 12px; font-weight: 500;
+  }
+  .chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .chip.good { color: var(--good); background: var(--good-soft); }
+  .chip.bad { color: var(--bad); background: var(--bad-soft); }
+  .rank { font-family: var(--font-mono); color: var(--muted); font-size: 12px; width: 1.4em; }
+  .demo .dice { text-align: center; padding: 8px 0 4px; }
+  .demo .dice b { font-weight: 500; font-size: 15px; }
+  .demo .dice span { display: block; font-size: 12px; color: var(--muted); }
+
+  /* 评分机制 */
+  .scoring { display: grid; grid-template-columns: 1.05fr 1fr; gap: 28px; align-items: start; }
+  .formula {
+    font-family: var(--font-mono); font-size: 13.5px; line-height: 1.7;
+    background: var(--code-bg); border-radius: 8px; padding: 16px 18px;
+    overflow-x: auto; color: var(--ink); white-space: pre;
+  }
+  .formula .c { color: var(--muted); }
+  .formula .k { color: var(--accent); }
+  .bases { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 18px 0; }
+  .base { border-radius: 6px; padding: 10px 12px; }
+  .base b { display: block; font-family: var(--font-mono); font-size: 1.25rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+  .base span { font-size: 13px; }
+  .base.good { background: var(--good-soft); color: var(--good); }
+  .base.ok { background: var(--ok-soft); color: var(--ok); }
+  .base.bad { background: var(--bad-soft); color: var(--bad); }
+  .notes { color: var(--ink-2); font-size: 15px; display: flex; flex-direction: column; gap: 10px; }
+  .notes li { padding-left: 0; }
+  .notes ul { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 6px; }
+
+  .chart-card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 18px 18px 14px;
+    box-shadow: var(--shadow);
+  }
+  .chart-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+  .chart-head h4 { margin: 0; font-size: 14px; font-weight: 500; }
+  .chart-head span { font-size: 12px; color: var(--muted); font-family: var(--font-mono); }
+  .chart { position: relative; width: 100%; }
+  .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .chart .grid line { stroke: var(--grid); stroke-width: 1; }
+  .chart .axis text { fill: var(--muted); font-family: var(--font-mono); font-size: 11px; }
+  .chart .axis line { stroke: var(--line-strong); }
+  .chart .area { fill: var(--accent); opacity: 0.08; }
+  .chart .curve { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; }
+  .chart .pt { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
+  .chart .lbl { fill: var(--ink); font-family: var(--font-mono); font-size: 11.5px; font-weight: 500; }
+  .chart .lbl.sub { fill: var(--muted); font-weight: 400; }
+  .chart .cross { stroke: var(--line-strong); stroke-dasharray: 3 3; }
+  .chart .hover-pt { fill: var(--surface); stroke: var(--accent); stroke-width: 2; }
+  .tip {
+    position: absolute; pointer-events: none; transform: translate(-50%, calc(-100% - 10px));
+    background: var(--ink); color: var(--bg); font-family: var(--font-mono); font-size: 12px;
+    padding: 5px 9px; border-radius: 5px; white-space: nowrap; opacity: 0; transition: opacity .12s;
+  }
+  .chart-foot { font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+  /* 技术栈 */
+  .stack { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .stack-col { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 20px 22px; }
+  .stack-col h3 { margin: 0 0 10px; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+  .stack-col ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; font-size: 15px; }
+  .stack-col li { display: flex; justify-content: space-between; gap: 12px; }
+  .stack-col li span { color: var(--muted); font-size: 13px; text-align: right; }
+  .layers {
+    margin-top: 16px; font-family: var(--font-mono); font-size: 13px; color: var(--ink-2);
+    background: var(--code-bg); border-radius: 8px; padding: 14px 18px; overflow-x: auto; white-space: nowrap;
+  }
+  .layers b { color: var(--ink); font-weight: 500; }
+  .layers .arr { color: var(--accent); margin: 0 8px; }
+
+  /* 路线 */
+  .timeline { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; position: relative; margin-top: 8px; }
+  .timeline::before {
+    content: ""; position: absolute; left: 0; right: 0; top: 7px; height: 1px; background: var(--line-strong);
+  }
+  .ms { position: relative; padding: 24px 14px 0 0; }
+  .ms::before {
+    content: ""; position: absolute; left: 0; top: 2px; width: 11px; height: 11px; border-radius: 50%;
+    background: var(--bg); border: 2px solid var(--line-strong);
+  }
+  .ms.done::before { background: var(--ink); border-color: var(--ink); }
+  .ms.now::before { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+  .ms b { display: block; font-family: var(--font-mono); font-size: 12px; color: var(--muted); letter-spacing: 0.04em; }
+  .ms.now b { color: var(--accent); }
+  .ms strong { display: block; font-weight: 500; margin: 2px 0 4px; }
+  .ms span { font-size: 13px; color: var(--muted); line-height: 1.5; display: block; }
+  .acceptance {
+    margin-top: 28px; padding: 16px 20px; border-left: 2px solid var(--accent);
+    background: var(--surface); border-radius: 0 8px 8px 0; font-size: 15px; color: var(--ink-2);
+  }
+  .acceptance b { color: var(--ink); font-weight: 500; }
+
+  footer {
+    margin-top: 72px; padding-top: 20px; border-top: 1px solid var(--line);
+    display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px 24px;
+    font-size: 13px; color: var(--muted);
+  }
+  footer .links { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+  footer .pending { color: var(--muted); }
+  footer .pending::after { content: " · 整理中"; font-family: var(--font-mono); font-size: 11px; }
+
+  @media (max-width: 720px) {
+    .hero { padding-block: 44px 32px; }
+    .pillars { grid-template-columns: 1fr; }
+    .pillar { border-left: 0; padding-left: 0; padding-right: 0; border-top: 1px solid var(--line); }
+    .pillar:first-child { border-top: 0; }
+    .features, .scoring, .stack { grid-template-columns: 1fr; }
+    .timeline { grid-template-columns: 1fr; gap: 0; }
+    .timeline::before { left: 5px; right: auto; top: 0; bottom: 0; width: 1px; height: auto; }
+    .ms { padding: 0 0 22px 26px; }
+    .ms::before { top: 6px; }
+    .ms:last-child { padding-bottom: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+
+<div class="wrap">
+  <header class="topbar">
+    <div class="mark"><i></i>校园食堂点评推荐</div>
+    <div class="status">M1 · MVP 开发中</div>
+  </header>
+
+  <section class="hero" aria-labelledby="hero-title">
+    <p class="eyebrow">项目介绍</p>
+    <h1 id="hero-title">到食堂之前，就知道<em>今天哪个窗口别去</em>。</h1>
+    <p class="lede">面向大学生的食堂菜品级点评与推荐工具。评价对象精确到窗口和菜品，评价一次只要 5 秒，榜单按天更新。</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" id="product-link" href="#" role="button" aria-disabled="true" tabindex="-1"><i></i>产品即将上线</a>
+      <span class="cta-note">线上地址部署后在此更新。接口文档随服务一起发布在 <code>/docs</code>。</span>
+    </div>
+
+    <div class="pillars" aria-label="三个核心取向">
+      <div class="pillar"><b>避雷优先</b><span>一条踩雷的权重大于一条好评。先告诉你别去哪，再告诉你去哪。</span></div>
+      <div class="pillar"><b>5 秒评价</b><span>好评 / 一般 / 踩雷三选一即可提交，不写长文，不传多图。</span></div>
+      <div class="pillar"><b>天级时效</b><span>换厨师、涨价、今日特供，三天前的评价权重只剩一半。</span></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="why-title">
+    <p class="eyebrow">为什么不用大众点评</p>
+    <h2 id="why-title">食堂不是餐厅，决策方式完全不同</h2>
+    <p class="sub">学生每天面临两到三次“食堂吃什么”的决策，决策时间以秒计，信息三天就过期。通用点评产品的粒度、频率和成本都不匹配这个场景。</p>
+    <div class="table-wrap">
+      <table class="compare">
+        <thead>
+          <tr><th scope="col">维度</th><th scope="col">通用点评产品</th><th scope="col">本系统</th></tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">评价对象</th><td class="them">店铺</td><td class="us"><span class="hl">窗口 / 菜品</span></td></tr>
+          <tr><th scope="row">使用频率</th><td class="them">低频，偶尔聚餐</td><td class="us">每天 2–3 次</td></tr>
+          <tr><th scope="row">决策时间</th><td class="them">几分钟到几小时</td><td class="us"><span class="hl">30 秒以内</span></td></tr>
+          <tr><th scope="row">信息时效</th><td class="them">月级</td><td class="us"><span class="hl">天级</span>，半衰期 3 天</td></tr>
+          <tr><th scope="row">核心价值</th><td class="them">发现</td><td class="us"><span class="hl">避雷</span> &gt; 发现</td></tr>
+          <tr><th scope="row">评价成本</th><td class="them">长文 + 多图</td><td class="us"><span class="hl">5 秒</span>一键评价</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="mvp-title">
+    <p class="eyebrow">MVP 范围</p>
+    <h2 id="mvp-title">只做四件事</h2>
+    <p class="sub">MVP 的唯一目标是验证一个假设：学生愿意每天花 5 秒告诉别人“这顿饭怎么样”。评价行为跑不起来，推荐算法就没有数据基础。关注、私信、积分商城、外卖，这些都明确不做。</p>
+    <div class="features">
+      <article class="feature">
+        <h3>窗口列表 <small>GET /stalls</small></h3>
+        <p>按食堂和楼层浏览所有窗口与常驻菜品，价格、辣度、是否素食一目了然。</p>
+        <div class="demo" aria-label="窗口列表示例">
+          <div class="row"><span class="name">二食堂 · 3F · 川味香锅</span><span class="meta">川菜</span></div>
+          <div class="row"><span class="name">麻辣香锅（荤）</span><span class="meta">¥18.00 · 辣 3</span></div>
+          <div class="row"><span class="name">麻辣香锅（素）</span><span class="meta">¥12.00 · 辣 3 · 素</span></div>
+        </div>
+      </article>
+      <article class="feature">
+        <h3>一键评价 <small>POST /reviews</small></h3>
+        <p>三选一，点一下就提交。可选附带一个预设标签，比如“分量少了”“换厨师了”。</p>
+        <div class="demo" aria-label="一键评价示例">
+          <div class="verdicts">
+            <div class="verdict good">好评<small>+1.0</small></div>
+            <div class="verdict ok">一般<small>0</small></div>
+            <div class="verdict bad">踩雷<small>−1.5</small></div>
+          </div>
+        </div>
+      </article>
+      <article class="feature">
+        <h3>今日榜单 <small>GET /rankings</small></h3>
+        <p>好评榜和踩雷榜各一份，每 10 分钟重算一次，只看最近 7 天的评价。</p>
+        <div class="demo" aria-label="榜单示例">
+          <div class="row"><span class="name"><span class="rank">1</span>番茄炒蛋 · 家常小炒</span><span class="chip good">好评榜</span></div>
+          <div class="row"><span class="name"><span class="rank">2</span>肉包 · 早点窗口</span><span class="chip good">好评榜</span></div>
+          <div class="row"><span class="name"><span class="rank">1</span>鱼香肉丝 · 家常小炒</span><span class="chip bad">踩雷榜</span></div>
+        </div>
+      </article>
+      <article class="feature">
+        <h3>随机推荐 <small>GET /recommend/random</small></h3>
+        <p>解决选择困难。从近期评分不差的菜品里随机抽一个，可按预算和辣度过滤。</p>
+        <div class="demo" aria-label="随机推荐示例">
+          <div class="dice"><b>今天吃这个：豆浆 + 肉包</b><span>二食堂 1F · 早点窗口 · ¥4.50</span></div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section aria-labelledby="score-title">
+    <p class="eyebrow">评分机制</p>
+    <h2 id="score-title">踩雷更重，旧评价更轻</h2>
+    <p class="sub">榜单不是简单的好评数减差评数。每条评价有一个基础分，再乘以随时间衰减的权重，最后做贝叶斯平滑，防止一条好评把新菜推到榜首。</p>
+    <div class="scoring">
+      <div>
+        <div class="bases" aria-label="三种评价的基础分">
+          <div class="base good"><b>+1.0</b><span>好评 good</span></div>
+          <div class="base ok"><b>0.0</b><span>一般 ok</span></div>
+          <div class="base bad"><b>−1.5</b><span>踩雷 bad</span></div>
+        </div>
+<pre class="formula"><span class="c"># 单条评价的权重：半衰期 3 天，再乘用户可信度</span>
+weight(t) = 0.5 ^ (age_days / <span class="k">3</span>) × trust_score
+
+<span class="c"># 菜品 7 日评分：贝叶斯平滑，k = 2</span>
+score_7d = Σ(base_i × weight_i) / (Σ weight_i + <span class="k">2</span>)</pre>
+        <div class="notes">
+          <ul>
+            <li>踩雷的绝对值大于好评，体现“避雷优先”：一条踩雷比一条好评更值得被看到。</li>
+            <li>平滑常数 k = 2 相当于预置了两条权重为 1 的中性评价。一条好评的新菜得分只有 0.33，上不了榜首。</li>
+            <li>trust_score 用于压低疑似刷评账号的影响，默认 1.0。</li>
+          </ul>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-head"><h4>评价权重随天数衰减</h4><span>trust_score = 1.0</span></div>
+        <div class="chart" id="decay-chart">
+          <svg viewBox="0 0 400 230" role="img" aria-label="指数衰减曲线：第 0 天权重 1.0，第 3 天 0.5，第 7 天约 0.2，第 14 天约 0.04"></svg>
+          <div class="tip" id="decay-tip"></div>
+        </div>
+        <p class="chart-foot">7 天前的评价权重只剩约五分之一，14 天前的基本不再影响榜单。悬停查看任意一天的权重。</p>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="stack-title">
+    <p class="eyebrow">技术栈与架构</p>
+    <h2 id="stack-title">单机 SQLite 就够用的轻后端</h2>
+    <p class="sub">目标是一所学校、一个食堂起步，日均百级评价量。选型以开发速度和部署简单为先，向量检索和 PostgreSQL 迁移留到后续阶段。</p>
+    <div class="stack">
+      <div class="stack-col">
+        <h3>后端</h3>
+        <ul>
+          <li>Python 3.12 · FastAPI<span>异步接口</span></li>
+          <li>SQLAlchemy 2.0 async · aiosqlite<span>ORM 与驱动</span></li>
+          <li>SQLite（WAL 模式）<span>单文件数据库</span></li>
+          <li>Pydantic v2 · Alembic<span>校验与迁移</span></li>
+          <li>APScheduler<span>每 10 分钟重算榜单</span></li>
+        </ul>
+      </div>
+      <div class="stack-col">
+        <h3>前端</h3>
+        <ul>
+          <li>React 18 · TypeScript<span>组件与类型</span></li>
+          <li>Vite<span>构建与开发代理</span></li>
+          <li>TanStack Query<span>服务端状态</span></li>
+          <li>Zustand<span>本地状态</span></li>
+          <li>React Router<span>页面路由</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="layers" aria-label="后端分层">
+      <b>api</b><span class="arr">→</span><b>services</b><span class="arr">→</span><b>repositories</b><span class="arr">→</span><b>models</b>
+      <span style="color: var(--muted)">&nbsp;&nbsp;// 路由层不写业务逻辑；评价表 append-only，聚合指标全部派生</span>
+    </div>
+  </section>
+
+  <section aria-labelledby="road-title">
+    <p class="eyebrow">迭代路线</p>
+    <h2 id="road-title">先验证评价行为，再谈推荐算法</h2>
+    <div class="timeline">
+      <div class="ms done"><b>M0 · 种子</b><strong>菜品录入</strong><span>单食堂全部窗口菜品 CSV 导入</span></div>
+      <div class="ms now"><b>M1 · MVP</b><strong>验证评价行为</strong><span>窗口列表、一键评价、好评/踩雷榜、随机推荐、邮箱登录</span></div>
+      <div class="ms"><b>M2 · 深化</b><strong>提升决策效率</strong><span>踩雷预警、价格追踪、情境过滤、混合搜索</span></div>
+      <div class="ms"><b>M3 · 个性化</b><strong>千人千面</strong><span>协同过滤、评价语义聚合、新菜投稿与想吃投票</span></div>
+      <div class="ms"><b>M4 · 扩展</b><strong>多食堂 / 多校区</strong><span>迁移 PostgreSQL + pgvector，食堂方周报</span></div>
+    </div>
+    <div class="acceptance">
+      <b>M1 验收标准：</b>上线 2 周后，目标食堂 60% 以上的常驻菜品有 3 条以上评价，日均评价数不低于 100。达不到说明核心假设有问题，回到产品层面调整评价激励，而不是继续堆功能。
+    </div>
+  </section>
+
+  <footer>
+    <div class="links">
+      <span class="pending">GitHub 仓库</span>
+      <span>架构设计文档随仓库发布</span>
+    </div>
+    <div>校园食堂点评推荐 · 2026</div>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var HALF_LIFE = 3;
+  var MAX_DAY = 14;
+  var svg = document.querySelector('#decay-chart svg');
+  var tip = document.getElementById('decay-tip');
+  var W = 400, H = 230;
+  var m = { top: 18, right: 16, bottom: 34, left: 40 };
+  var iw = W - m.left - m.right, ih = H - m.top - m.bottom;
+  var x = function (d) { return m.left + (d / MAX_DAY) * iw; };
+  var y = function (w) { return m.top + (1 - w) * ih; };
+  var weight = function (d) { return Math.pow(0.5, d / HALF_LIFE); };
+  var NS = 'http://www.w3.org/2000/svg';
+  function el(tag, attrs, text) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (text != null) e.textContent = text;
+    return e;
+  }
+
+  // 网格与坐标轴
+  var grid = el('g', { 'class': 'grid' });
+  [0, 0.25, 0.5, 0.75, 1].forEach(function (w) {
+    grid.appendChild(el('line', { x1: m.left, x2: m.left + iw, y1: y(w), y2: y(w) }));
+  });
+  svg.appendChild(grid);
+
+  var axis = el('g', { 'class': 'axis' });
+  axis.appendChild(el('line', { x1: m.left, x2: m.left + iw, y1: y(0), y2: y(0) }));
+  [0, 0.5, 1].forEach(function (w) {
+    axis.appendChild(el('text', { x: m.left - 8, y: y(w) + 4, 'text-anchor': 'end' }, w.toFixed(1)));
+  });
+  [0, 3, 7, 14].forEach(function (d) {
+    axis.appendChild(el('text', { x: x(d), y: y(0) + 18, 'text-anchor': 'middle' }, d + ' 天'));
+  });
+  svg.appendChild(axis);
+
+  // 面积与曲线（每 0.1 天采样）
+  var pts = [];
+  for (var d = 0; d <= MAX_DAY + 1e-9; d += 0.1) pts.push([x(d), y(weight(d))]);
+  var path = pts.map(function (p, i) { return (i ? 'L' : 'M') + p[0].toFixed(2) + ',' + p[1].toFixed(2); }).join(' ');
+  svg.appendChild(el('path', { 'class': 'area', d: path + ' L' + x(MAX_DAY).toFixed(2) + ',' + y(0) + ' L' + m.left + ',' + y(0) + ' Z' }));
+  svg.appendChild(el('path', { 'class': 'curve', d: path }));
+
+  // 关键点与直接标注
+  var marks = [
+    { d: 0, label: '1.00', dx: 10, dy: 4, anchor: 'start' },
+    { d: 3, label: '0.50', dx: 10, dy: -4, anchor: 'start' },
+    { d: 7, label: '0.20', dx: 10, dy: -4, anchor: 'start' },
+    { d: 14, label: '0.04', dx: -10, dy: -8, anchor: 'end' }
+  ];
+  marks.forEach(function (k) {
+    svg.appendChild(el('circle', { 'class': 'pt', cx: x(k.d), cy: y(weight(k.d)), r: 4.5 }));
+    svg.appendChild(el('text', { 'class': 'lbl', x: x(k.d) + k.dx, y: y(weight(k.d)) + k.dy, 'text-anchor': k.anchor }, k.label));
+  });
+  svg.appendChild(el('text', { 'class': 'lbl sub', x: m.left, y: m.top - 6 }, '权重'));
+
+  // 悬停：十字线 + 提示
+  var cross = el('line', { 'class': 'cross', y1: m.top, y2: y(0), x1: -10, x2: -10 });
+  var hp = el('circle', { 'class': 'hover-pt', r: 5, cx: -10, cy: -10 });
+  svg.appendChild(cross); svg.appendChild(hp);
+  var wrap = document.getElementById('decay-chart');
+  function move(ev) {
+    var r = svg.getBoundingClientRect();
+    var px = ((ev.clientX - r.left) / r.width) * W;
+    var d = Math.min(MAX_DAY, Math.max(0, (px - m.left) / iw * MAX_DAY));
+    d = Math.round(d * 2) / 2; // 半天步进
+    var w = weight(d);
+    cross.setAttribute('x1', x(d)); cross.setAttribute('x2', x(d));
+    hp.setAttribute('cx', x(d)); hp.setAttribute('cy', y(w));
+    tip.textContent = d + ' 天前 · 权重 ' + w.toFixed(2);
+    tip.style.left = (x(d) / W * 100) + '%';
+    tip.style.top = (y(w) / H * 100) + '%';
+    tip.style.opacity = 1;
+  }
+  function leave() {
+    tip.style.opacity = 0;
+    cross.setAttribute('x1', -10); cross.setAttribute('x2', -10);
+    hp.setAttribute('cx', -10); hp.setAttribute('cy', -10);
+  }
+  wrap.addEventListener('mousemove', move);
+  wrap.addEventListener('mouseleave', leave);
+  wrap.addEventListener('touchstart', function (e) { if (e.touches[0]) move(e.touches[0]); }, { passive: true });
+  wrap.addEventListener('touchmove', function (e) { if (e.touches[0]) move(e.touches[0]); }, { passive: true });
+  wrap.addEventListener('touchend', leave);
+
+  // 禁用的占位按钮：阻止跳转
+  var link = document.getElementById('product-link');
+  link.addEventListener('click', function (e) { if (link.getAttribute('aria-disabled') === 'true') e.preventDefault(); });
+})();
+</script>

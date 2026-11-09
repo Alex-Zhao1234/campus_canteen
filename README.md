@@ -5,7 +5,7 @@
 - 前端：React 18 + TypeScript + Vite
 - 后端：Python 3.11+ / FastAPI / SQLAlchemy 2.0 (async)
 - 数据库：SQLite（WAL），第二阶段加入 sqlite-vec 向量检索
-- 线上占位页：https://claude.ai/artifact/9oBEZPyiWA3QHYsiHH4mdt
+- 项目介绍页（展示用，源码在 `docs/showcase/index.html`）：https://claude.ai/artifact/9oBEZPyiWA3QHYsiHH4mdt
 
 ## WSL 环境准备（首次）
 

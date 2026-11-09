@@ -32,11 +32,11 @@ async def test_seed_tags_is_idempotent(db):
 
 async def test_seed_dishes_builds_org_chain(db):
     stats = await seed_dishes(db, CSV_PATH)
-    assert stats == {"campus": 1, "canteen": 1, "stall": 3, "dish": 6}
+    assert stats == {"campus": 1, "canteen": 2, "stall": 13, "dish": 38}
     assert await _count(db, Campus) == 1
-    assert await _count(db, Canteen) == 1
-    assert await _count(db, Stall) == 3
-    assert await _count(db, Dish) == 6
+    assert await _count(db, Canteen) == 2
+    assert await _count(db, Stall) == 13
+    assert await _count(db, Dish) == 38
 
 
 async def test_seed_dishes_maps_csv_fields(db):
@@ -60,8 +60,8 @@ async def test_seed_dishes_is_idempotent(db):
     await seed_dishes(db, CSV_PATH)
     stats = await seed_dishes(db, CSV_PATH)
     assert stats == {"campus": 0, "canteen": 0, "stall": 0, "dish": 0}
-    assert await _count(db, Dish) == 6
-    assert await _count(db, Stall) == 3
+    assert await _count(db, Dish) == 38
+    assert await _count(db, Stall) == 13
 
 
 async def test_seed_dishes_reuses_existing_canteen_under_campus(db):
@@ -70,5 +70,5 @@ async def test_seed_dishes_reuses_existing_canteen_under_campus(db):
     await db.commit()
     stats = await seed_dishes(db, CSV_PATH)
     assert stats["campus"] == 0
-    assert stats["canteen"] == 0
-    assert await _count(db, Canteen) == 1
+    assert stats["canteen"] == 1  # 二食堂复用，只新建三食堂
+    assert await _count(db, Canteen) == 2

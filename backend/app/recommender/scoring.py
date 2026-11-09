@@ -12,7 +12,7 @@ ALERT_WINDOW_HOURS = 24
 RANK_MIN_REVIEWS = 3
 COLD_START_TOTAL_REVIEWS = 500
 BAD_RANK_MAX_SCORE = -0.3
-RANK_SIZE = 20
+RANK_SIZE = 10
 
 
 def time_weight(created_at: datetime, now: datetime, trust_score: float = 1.0) -> float:

@@ -21,40 +21,72 @@ DEMO_USERS = [
     ("demo-c@demo.edu.cn", "演示同学 C"),
     ("demo-d@demo.edu.cn", "演示同学 D"),
     ("demo-e@demo.edu.cn", "演示同学 E"),
+    ("demo-f@demo.edu.cn", "演示同学 F"),
 ]
 
-# (菜名, 用户序号, verdict, 距今小时数, 标签 codes, 评论)
-# 同一用户同一菜同一北京日只能一条，下面的组合已错开。
-DEMO_REVIEWS: list[tuple[str, int, str, float, list[str], str | None]] = [
-    # 麻辣香锅(荤)：口碑最好 → 好评榜第一
-    ("麻辣香锅(荤)", 0, "good", 3, ["worth_it", "portion_good"], "料足，18 块很值"),
-    ("麻辣香锅(荤)", 1, "good", 6, ["fresh"], None),
-    ("麻辣香锅(荤)", 2, "good", 26, ["portion_good"], "分量实在"),
-    ("麻辣香锅(荤)", 3, "good", 30, [], None),
-    ("麻辣香锅(荤)", 4, "ok", 50, ["queue_long"], "中午排队有点久"),
-    ("麻辣香锅(荤)", 0, "good", 75, [], None),
-    # 番茄炒蛋：稳定好评
-    ("番茄炒蛋", 1, "good", 4, ["worth_it"], "8 块钱吃饱"),
-    ("番茄炒蛋", 2, "good", 28, [], None),
-    ("番茄炒蛋", 3, "good", 52, ["fresh"], None),
-    ("番茄炒蛋", 4, "ok", 100, [], None),
-    # 肉包：早餐好评
-    ("肉包", 0, "good", 5, ["worth_it"], None),
-    ("肉包", 2, "good", 29, [], "皮薄馅大"),
-    ("肉包", 4, "ok", 53, [], None),
-    # 豆浆：一般偏好
-    ("豆浆", 1, "good", 7, [], None),
-    ("豆浆", 3, "ok", 31, ["bland"], "有点淡"),
-    # 麻辣香锅(素)：褒贬不一
-    ("麻辣香锅(素)", 2, "good", 8, [], None),
-    ("麻辣香锅(素)", 3, "bad", 27, ["too_oily"], "太油了"),
-    # 鱼香肉丝：近 24h 集中踩雷 → 踩雷榜 + 家常小炒窗口黄牌
-    ("鱼香肉丝", 0, "bad", 2, ["too_salty", "quality_drop"], "换厨师了？齁咸"),
-    ("鱼香肉丝", 1, "bad", 5, ["too_oily"], None),
-    ("鱼香肉丝", 2, "bad", 9, ["quality_drop"], "不如以前"),
-    ("鱼香肉丝", 3, "bad", 20, ["too_salty"], None),
-    ("鱼香肉丝", 4, "ok", 70, [], None),
-]
+# 每道菜的口碑画像：(good, ok, bad, recent_bad)
+# recent_bad=True 的踩雷落在近 24h 内 → 触发所在窗口黄牌；其余踩雷都在 24h 之外，避免误伤整个窗口。
+# 好评榜 ≥ 10 道正分、踩雷榜 ≥ 10 道 < -0.3，榜首分别是 麻辣香锅(荤) 与 鱼香肉丝。
+DEMO_PROFILES: dict[str, tuple[int, int, int, bool]] = {
+    # ---- 好评阵营 ----
+    "麻辣香锅(荤)": (6, 1, 0, False),
+    "番茄炒蛋": (4, 1, 0, False),
+    "叉烧饭": (4, 0, 0, False),
+    "牛肉面": (3, 1, 0, False),
+    "肉包": (3, 1, 0, False),
+    "咖喱鸡排饭": (3, 0, 0, False),
+    "石锅拌饭": (3, 0, 0, False),
+    "肉夹馍": (2, 1, 0, False),
+    "锅包肉": (2, 0, 0, False),
+    "豆浆": (2, 1, 0, False),
+    "红烧肉": (2, 0, 0, False),
+    "羊肉泡馍": (1, 1, 0, False),
+    # ---- 中性 ----
+    "麻辣香锅(素)": (1, 1, 1, False),
+    "小米粥": (0, 2, 0, False),
+    "刀削面": (1, 0, 1, False),
+    # ---- 踩雷阵营 ----
+    "鱼香肉丝": (0, 0, 5, True),
+    "酸辣土豆丝": (0, 0, 2, False),
+    "油条": (0, 1, 3, False),
+    "炸酱面": (0, 0, 2, False),
+    "冒菜": (0, 1, 3, False),
+    "青椒肉丝盖饭": (0, 0, 2, False),
+    "白切鸡饭": (0, 1, 2, False),
+    "铁板鱿鱼": (0, 0, 3, False),
+    "部队锅": (0, 0, 2, False),
+    "酸菜白肉": (0, 1, 2, False),
+    "农家小炒肉": (0, 0, 2, False),
+}
+
+_TAGS = {
+    "good": ["worth_it", "portion_good", "fresh"],
+    "ok": ["queue_long", "bland", "portion_less"],
+    "bad": ["too_salty", "too_oily", "quality_drop", "price_up"],
+}
+_COMMENTS = {
+    "good": ["料足，很值", "分量实在", "今天这个不错", None],
+    "ok": ["中午排队有点久", "一般般", None],
+    "bad": ["换厨师了？齁咸", "太油了", "不如以前", None],
+}
+
+
+def _demo_events() -> list[tuple[str, int, str, float, list[str], str | None]]:
+    """把口碑画像展开成 (菜名, 用户序号, verdict, 距今小时, 标签, 评论) 列表。
+
+    同一道菜的评价依次用不同用户、间隔 ~1 天，天然满足"单人单菜单日一评"。
+    """
+    events = []
+    for dish, (good, ok, bad, recent) in DEMO_PROFILES.items():
+        k = 0
+        for verdict, count in (("good", good), ("ok", ok), ("bad", bad)):
+            for _ in range(count):
+                hours = 2 + k * 5 if (recent and verdict == "bad") else 3 + k * 23
+                tags = [_TAGS[verdict][k % len(_TAGS[verdict])]] if k % 2 == 0 else []
+                comment = _COMMENTS[verdict][k % len(_COMMENTS[verdict])]
+                events.append((dish, k % len(DEMO_USERS), verdict, hours, tags, comment))
+                k += 1
+    return events
 
 
 async def seed_demo_reviews(session: AsyncSession, now: datetime | None = None) -> int:
@@ -79,7 +111,7 @@ async def seed_demo_reviews(session: AsyncSession, now: datetime | None = None) 
     await session.flush()
 
     created = 0
-    for dish_name, ui, verdict, hours_ago, codes, comment in DEMO_REVIEWS:
+    for dish_name, ui, verdict, hours_ago, codes, comment in _demo_events():
         dish = dishes.get(dish_name)
         if dish is None:
             continue  # 自定义 CSV 里没有这道菜就跳过

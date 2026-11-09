@@ -16,3 +16,84 @@ body {
   color: var(--fg);
   font-family: -apple-system, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
 }
+
+/* ---------- 布局 ---------- */
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+.app { min-height: 100dvh; display: flex; flex-direction: column; max-width: 640px; margin: 0 auto; }
+.topbar {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: center; gap: .5rem;
+  padding: calc(.6rem + env(safe-area-inset-top)) 1rem .6rem;
+  background: var(--bg); border-bottom: 1px solid color-mix(in srgb, var(--fg) 10%, transparent);
+}
+.brand { font-size: 1.1rem; margin: 0; font-weight: 700; }
+.back { font-size: 1.6rem; line-height: 1; padding: 0 .4rem 0 0; }
+.content { flex: 1; padding: 1rem 1rem calc(4.5rem + env(safe-area-inset-bottom)); }
+.tabbar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 10;
+  display: flex; max-width: 640px; margin: 0 auto;
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--bg); border-top: 1px solid color-mix(in srgb, var(--fg) 10%, transparent);
+}
+.tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: .1rem; padding: .5rem 0 .4rem; font-size: .75rem; color: var(--muted); }
+.tab span { font-size: 1.25rem; }
+.tab.active { color: var(--accent); font-weight: 600; }
+
+/* ---------- 文本 ---------- */
+.page-title { margin: 0 0 .25rem; font-size: 1.4rem; }
+.section-title { margin: 1.25rem 0 .5rem; font-size: .9rem; color: var(--muted); font-weight: 600; letter-spacing: .05em; }
+.subtitle, .meta, .footnote { margin: 0 0 .75rem; color: var(--muted); font-size: .9rem; }
+.subtitle a { color: var(--accent); }
+.footnote { margin-top: 1rem; font-size: .8rem; text-align: center; }
+.state { padding: 2.5rem 1rem; text-align: center; color: var(--muted); }
+.state-error { color: var(--bad); }
+
+/* ---------- 筛选 chips / 分段控件 ---------- */
+.chips { display: flex; gap: .5rem; overflow-x: auto; padding-bottom: .25rem; margin-bottom: .75rem; scrollbar-width: none; }
+.chips::-webkit-scrollbar { display: none; }
+.chip {
+  flex: none; padding: .35rem .85rem; border-radius: 999px; font-size: .9rem;
+  background: color-mix(in srgb, var(--fg) 7%, transparent);
+}
+.chip.active { background: var(--accent); color: #fff; }
+.segmented {
+  display: flex; padding: .25rem; margin-bottom: 1rem; border-radius: .75rem;
+  background: color-mix(in srgb, var(--fg) 7%, transparent);
+}
+.segmented button { flex: 1; padding: .5rem; border-radius: .5rem; font-weight: 600; color: var(--muted); }
+.segmented button.active { background: var(--bg); color: var(--good); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.segmented button.active.bad { color: var(--bad); }
+
+/* ---------- 卡片 / 榜单 ---------- */
+.cards, .ranking { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .5rem; }
+.card, .rank-row {
+  display: flex; align-items: center; gap: .75rem; padding: .85rem 1rem; border-radius: .9rem;
+  background: color-mix(in srgb, var(--fg) 4%, transparent);
+}
+.card:active, .rank-row:active { background: color-mix(in srgb, var(--fg) 9%, transparent); }
+.card-main, .rank-main { flex: 1; display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
+.card-main strong, .rank-main strong { font-size: 1rem; }
+.card-main small, .rank-main small { color: var(--muted); font-size: .8rem; }
+.card-side, .rank-side { display: flex; flex-direction: column; align-items: flex-end; gap: .3rem; }
+.rank-no { width: 1.6rem; text-align: center; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+.rank-no.top { color: var(--accent); font-size: 1.15rem; }
+
+/* ---------- 徽标 ---------- */
+.badge {
+  display: inline-flex; align-items: baseline; gap: .15rem; padding: .2rem .55rem; border-radius: 999px;
+  font-size: .8rem; font-weight: 600; white-space: nowrap;
+  color: var(--tone, var(--muted)); background: color-mix(in srgb, var(--tone, var(--muted)) 14%, transparent);
+}
+.badge small { font-weight: 400; opacity: .8; }
+.badge-neutral { --tone: var(--muted); }
+.badge-muted { color: var(--muted); background: color-mix(in srgb, var(--fg) 6%, transparent); font-weight: 400; }
+.flag { font-size: .75rem; color: var(--bad); }
+.delta { font-size: .75rem; font-variant-numeric: tabular-nums; }
+.delta.up { color: var(--good); } .delta.down { color: var(--bad); } .delta.flat, .delta.new { color: var(--muted); }
+
+/* ---------- 菜品详情 ---------- */
+.stats { display: flex; flex-direction: column; gap: .75rem; padding: 1rem; border-radius: .9rem; background: color-mix(in srgb, var(--fg) 4%, transparent); }
+.stats dl { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .25rem; margin: 0; text-align: center; }
+.stats dt { grid-row: 2; font-size: .75rem; color: var(--muted); }
+.stats dd { grid-row: 1; margin: 0; font-size: 1.25rem; font-weight: 700; font-variant-numeric: tabular-nums; }

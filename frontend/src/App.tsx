@@ -1,22 +1,23 @@
 import { Route, Routes } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { api } from "./api/client";
-
-function Home() {
-  const { data } = useQuery({ queryKey: ["health"], queryFn: () => api.get<{ status: string }>("/health") });
-  return (
-    <main style={{ padding: "2rem", textAlign: "center" }}>
-      <h1>校园食堂点评推荐</h1>
-      <p>后端状态：{data?.status ?? "连接中…"}</p>
-    </main>
-  );
-}
+import { Layout } from "@/components/Layout";
+import { Home } from "@/pages/Home";
+import { Canteens } from "@/pages/Canteens";
+import { Canteen } from "@/pages/Canteen";
+import { Stall } from "@/pages/Stall";
+import { Dish } from "@/pages/Dish";
+import { Me } from "@/pages/Me";
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
-      {/* 后续：/canteen/:id  /stall/:id  /dish/:id  /search  /me */}
+      <Route element={<Layout />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/canteens" element={<Canteens />} />
+        <Route path="/canteen/:id" element={<Canteen />} />
+        <Route path="/stall/:id" element={<Stall />} />
+        <Route path="/dish/:id" element={<Dish />} />
+        <Route path="/me" element={<Me />} />
+      </Route>
     </Routes>
   );
 }

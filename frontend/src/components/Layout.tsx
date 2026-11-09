@@ -1,5 +1,6 @@
-import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { Navigate, NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { Toaster } from "@/components/Toaster";
+import { useAuthStore } from "@/stores/auth";
 
 const tabs = [
   { to: "/", label: "首页", icon: "🏠" },
@@ -9,8 +10,14 @@ const tabs = [
 
 export function Layout() {
   const navigate = useNavigate();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
+  const token = useAuthStore((s) => s.token);
   const isRoot = tabs.some((t) => t.to === pathname);
+
+  // 进入产品即登录：未登录时一律先去登录页，登录后回到原本想看的页面
+  if (!token && pathname !== "/login") {
+    return <Navigate to={`/login?next=${encodeURIComponent(pathname + search)}`} replace />;
+  }
   return (
     <div className="app">
       <header className="topbar">

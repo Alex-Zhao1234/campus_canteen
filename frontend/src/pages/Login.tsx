@@ -66,7 +66,8 @@ export function Login() {
           onChange={(e) => setEmail(e.target.value)}
           required
         />
-        <small className="hint muted">固定演示账号，{DEMO_EMAIL}</small>
+        <small className="hint muted">固定演示账号：{DEMO_EMAIL}</small>
+        <small className="hint muted">也可输入任意 xxx@xxx.edu.cn 格式的邮箱直接登录</small>
       </label>
 
       {step === "code" && (

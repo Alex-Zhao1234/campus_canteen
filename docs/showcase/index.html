@@ -338,7 +338,7 @@
 <div class="wrap">
   <header class="topbar">
     <div class="mark"><i></i>校园食堂点评推荐</div>
-    <div class="status">M1 · MVP 开发完成，待部署验证</div>
+    <div class="status">M1 · MVP 已上线演示</div>
   </header>
 
   <section class="hero" aria-labelledby="hero-title">
@@ -346,9 +346,9 @@
     <h1 id="hero-title">到食堂之前，就知道<em>今天哪个窗口别去</em>。</h1>
     <p class="lede">面向大学生的食堂菜品级点评与推荐工具。评价对象精确到窗口和菜品，评价一次只要 5 秒，榜单按天更新。</p>
     <div class="cta-row">
-      <a class="btn btn-primary" id="repo-link" href="https://github.com/Alex-Zhao1234/campus_canteen" target="_blank" rel="noopener">GitHub 仓库 →</a>
-      <a class="btn btn-primary" id="product-link" href="#" role="button" aria-disabled="true" tabindex="-1"><i></i>产品即将上线</a>
-      <span class="cta-note">前后端已可本地运行（<code>docker compose up</code> 一条命令）。演示用，登录页输入任意 <code>xxx@xxx.edu.cn</code> 邮箱按回车就直接进去。公网地址部署后在此更新，接口文档随服务发布在 <code>/docs</code>。</span>
+      <a class="btn btn-primary" id="product-link" href="https://campus-canteen-34yw.onrender.com" target="_blank" rel="noopener">打开产品 →</a>
+      <a class="btn btn-primary" id="repo-link" href="https://github.com/Alex-Zhao1234/campus_canteen" target="_blank" rel="noopener">GitHub 仓库</a>
+      <span class="cta-note">演示用，登录页输入任意 <code>xxx@xxx.edu.cn</code> 邮箱按回车就直接进去。免费托管，闲置后首次打开约需 1 分钟唤醒。接口文档见 <a href="https://campus-canteen-34yw.onrender.com/docs" target="_blank" rel="noopener"><code>/docs</code></a>。</span>
     </div>
 
     <div class="pillars" aria-label="三个核心取向">
@@ -600,8 +600,5 @@ score_7d = Σ(base_i × weight_i) / (Σ weight_i + <span class="k">2</span>)</pr
   wrap.addEventListener('touchmove', function (e) { if (e.touches[0]) move(e.touches[0]); }, { passive: true });
   wrap.addEventListener('touchend', leave);
 
-  // 禁用的占位按钮：阻止跳转
-  var link = document.getElementById('product-link');
-  link.addEventListener('click', function (e) { if (link.getAttribute('aria-disabled') === 'true') e.preventDefault(); });
 })();
 </script>

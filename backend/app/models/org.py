@@ -56,6 +56,8 @@ class Dish(IdMixin, CreatedAtMixin, Base):
     portion_hint: Mapped[str | None] = mapped_column(String(50))
     # 常驻 / 限时 / 每周X
     dish_type: Mapped[str] = mapped_column(String(10), default="常驻", nullable=False)
+    # 菜品配图：站内静态路径（/dish-images/xxx.jpg）或外链；为空前端显示占位
+    image_url: Mapped[str | None] = mapped_column(String(200))
     is_active: Mapped[bool] = mapped_column(default=True, nullable=False)
 
     stall: Mapped["Stall"] = relationship(back_populates="dishes", lazy="selectin")

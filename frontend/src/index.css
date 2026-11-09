@@ -184,3 +184,14 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .mini-tags span { padding: .1rem .5rem; border-radius: 999px; font-size: .7rem; background: color-mix(in srgb, var(--fg) 8%, transparent); color: var(--muted); }
 .link-btn { color: var(--bad); font-size: .85rem; padding: .25rem; }
 .link-btn:disabled { opacity: .5; }
+
+/* ---------- 菜品配图 ---------- */
+.dish-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+.dish-head-text { min-width: 0; flex: 1; }
+.dish-head .page-title, .dish-head .subtitle, .dish-head .meta { margin-bottom: .25rem; }
+.dish-photo {
+  flex: none; width: 7.5rem; height: 7.5rem; border-radius: 1rem; object-fit: cover;
+  background: color-mix(in srgb, var(--fg) 6%, transparent); box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+.dish-photo.placeholder { display: grid; place-items: center; font-size: 2.2rem; color: var(--muted); }
+@media (max-width: 360px) { .dish-photo { width: 6rem; height: 6rem; } }

@@ -54,6 +54,17 @@ async def test_seed_dishes_maps_csv_fields(db):
 
     baozi = await db.scalar(select(Dish).where(Dish.name == "肉包"))
     assert baozi.is_veg is False
+    assert dish.image_url == "/dish-images/malaxiangguo-su.jpg"
+
+
+async def test_seed_backfills_image_url_on_existing_dish(db):
+    await seed_dishes(db, CSV_PATH)
+    fanqie = await db.scalar(select(Dish).where(Dish.name == "番茄炒蛋"))
+    fanqie.image_url = None
+    await db.commit()
+    await seed_dishes(db, CSV_PATH)  # 再跑一次只补空图，不新建
+    await db.refresh(fanqie)
+    assert fanqie.image_url == "/dish-images/fanqiechaodan.jpg"
 
 
 async def test_seed_dishes_is_idempotent(db):

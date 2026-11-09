@@ -40,6 +40,8 @@ export interface Dish {
   is_veg: boolean;
   portion_hint: string | null;
   dish_type: string;
+  /** 站内静态路径或外链，null 时显示占位 */
+  image_url: string | null;
   stats: DishStats;
 }
 

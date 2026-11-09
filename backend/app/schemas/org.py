@@ -52,6 +52,7 @@ class DishBase(_FromORM):
     is_veg: bool
     portion_hint: str | None
     dish_type: str
+    image_url: str | None = None
 
 
 class DishOut(DishBase):

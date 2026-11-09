@@ -111,6 +111,7 @@ async def seed_dishes(
                 stalls[(canteen.id, stall_name)] = stall
 
             dish_name = row["dish_name"].strip()
+            image_url = (row.get("image_url") or "").strip() or None
             dish = await session.scalar(
                 select(Dish).where(Dish.stall_id == stall.id, Dish.name == dish_name)
             )
@@ -123,9 +124,13 @@ async def seed_dishes(
                         spicy_level=int(row.get("spicy_level") or 0),
                         is_veg=_to_bool(row.get("is_veg") or "0"),
                         dish_type=(row.get("dish_type") or "常驻").strip(),
+                        image_url=image_url,
                     )
                 )
                 stats["dish"] += 1
+            elif image_url and not dish.image_url:
+                # 已有菜品补图：只填空值，不覆盖人工改过的
+                dish.image_url = image_url
 
     await session.commit()
     return stats

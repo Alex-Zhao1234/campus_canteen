@@ -41,9 +41,9 @@ git init && git add -A && git commit -m "init: 项目骨架"
 ## 日常开发
 
 ```bash
-# 终端 1：后端
-cd backend && source .venv/bin/activate
-uvicorn app.main:app --reload          # http://localhost:8000/docs
+# 终端 1：后端（首次或拉取新迁移后先 make migrate）
+make migrate
+make dev-api                           # http://localhost:8000/docs
 
 # 终端 2：前端
 cd frontend && npm run dev             # http://localhost:5173

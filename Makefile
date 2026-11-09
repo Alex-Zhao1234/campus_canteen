@@ -1,4 +1,4 @@
-.PHONY: setup dev-api dev-web test lint seed
+.PHONY: setup dev-api dev-web test lint seed migrate migration
 
 setup:
 	./setup.sh
@@ -17,3 +17,11 @@ lint:
 
 seed:
 	cd backend && .venv/bin/python -m app.tasks.seed ../data/seed/dishes.csv
+
+# 升级数据库到最新迁移
+migrate:
+	cd backend && .venv/bin/alembic upgrade head
+
+# 根据模型变更生成新迁移：make migration m="add_xxx"
+migration:
+	cd backend && .venv/bin/alembic revision --autogenerate -m "$(m)"

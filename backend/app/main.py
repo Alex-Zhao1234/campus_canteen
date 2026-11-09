@@ -6,16 +6,14 @@ from fastapi.middleware.cors import CORSMiddleware
 import app.models  # noqa: F401  确保全部模型注册到 Base.metadata
 from app.api.v1.router import api_router
 from app.core.config import get_settings
-from app.core.database import Base, engine
+from app.core.database import engine
 
 settings = get_settings()
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    # MVP 阶段直接建表；引入 Alembic 后改为迁移管理
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    # 表结构由 Alembic 管理：启动前执行 `make migrate`（alembic upgrade head）
     yield
     await engine.dispose()
 

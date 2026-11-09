@@ -23,8 +23,11 @@ echo "==> 初始化 .env 与数据目录"
 [ -f .env ] || cp .env.example .env
 mkdir -p data/images
 
+echo "==> 数据库迁移"
+(cd backend && .venv/bin/alembic upgrade head)
+
 echo
 echo "完成。启动方式："
-echo "  后端:  cd backend && source .venv/bin/activate && uvicorn app.main:app --reload"
+echo "  后端:  make dev-api        （改了模型先 make migration m=\"说明\" 再 make migrate）"
 echo "  前端:  cd frontend && npm run dev"
 echo "  接口文档: http://localhost:8000/docs"

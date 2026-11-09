@@ -59,11 +59,12 @@ class Review(IdMixin, CreatedAtMixin, Base):
     tags: Mapped[list[Tag]] = relationship(secondary=ReviewTag.__table__, lazy="selectin")
 
 
-# 单人单菜单日限评一次。函数索引，Alembic autogenerate 识别不了，迁移脚本需手写。
+# 单人单菜单日限评一次。created_at 存 UTC，按北京日（+8h）切天。
+# 函数索引，Alembic autogenerate 识别不了，迁移脚本需手写。
 Index(
     "uq_review_daily",
     Review.user_id,
     Review.dish_id,
-    func.date(Review.created_at),
+    func.date(Review.created_at, "+8 hours"),
     unique=True,
 )

@@ -5,6 +5,9 @@ from datetime import datetime
 VERDICT_BASE = {"good": 1.0, "ok": 0.0, "bad": -1.5}
 HALF_LIFE_DAYS = 3.0
 BAYES_K = 2.0
+# 统计窗口：菜品/窗口的"近期"评分看 7 天，窗口预警看 24 小时
+RECENT_WINDOW_DAYS = 7
+ALERT_WINDOW_HOURS = 24
 
 
 def time_weight(created_at: datetime, now: datetime, trust_score: float = 1.0) -> float:

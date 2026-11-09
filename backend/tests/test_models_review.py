@@ -67,7 +67,7 @@ async def test_meal_slot_must_be_known_value(db):
 
 async def test_same_user_same_dish_same_day_only_once(db):
     user, dish = await _seed(db)
-    at = datetime(2026, 11, 9, 12, 0)
+    at = datetime(2026, 11, 9, 2, 0)  # UTC 02:00 = 北京 10:00，+6h 仍是同一北京日
     db.add(
         Review(
             user_id=user.id, dish_id=dish.id, stall_id=dish.stall_id, verdict="good", created_at=at
@@ -101,6 +101,47 @@ async def test_same_user_same_dish_next_day_is_allowed(db):
     )
     await db.commit()
     assert len((await db.scalars(select(Review))).all()) == 2
+
+
+async def test_daily_limit_uses_beijing_day_not_utc_day(db):
+    """库里存 UTC。北京 11-09 12:00(UTC 04:00) 与北京 11-10 04:00(UTC 11-09 20:00)
+    同属 UTC 11-09，但是不同北京日，应允许。"""
+    user, dish = await _seed(db)
+    db.add(
+        Review(
+            user_id=user.id, dish_id=dish.id, stall_id=dish.stall_id, verdict="good",
+            created_at=datetime(2026, 11, 9, 4, 0),
+        )
+    )
+    await db.commit()
+    db.add(
+        Review(
+            user_id=user.id, dish_id=dish.id, stall_id=dish.stall_id, verdict="bad",
+            created_at=datetime(2026, 11, 9, 20, 0),
+        )
+    )
+    await db.commit()
+    assert len((await db.scalars(select(Review))).all()) == 2
+
+
+async def test_daily_limit_blocks_same_beijing_day_across_utc_dates(db):
+    """北京 11-09 07:00(UTC 11-08 23:00) 与北京 11-09 12:00(UTC 11-09 04:00) 是同一北京日，应拦。"""
+    user, dish = await _seed(db)
+    db.add(
+        Review(
+            user_id=user.id, dish_id=dish.id, stall_id=dish.stall_id, verdict="good",
+            created_at=datetime(2026, 11, 8, 23, 0),
+        )
+    )
+    await db.commit()
+    db.add(
+        Review(
+            user_id=user.id, dish_id=dish.id, stall_id=dish.stall_id, verdict="bad",
+            created_at=datetime(2026, 11, 9, 4, 0),
+        )
+    )
+    with pytest.raises(IntegrityError):
+        await db.commit()
 
 
 async def test_review_can_carry_tags(db):

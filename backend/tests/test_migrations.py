@@ -46,7 +46,8 @@ def test_upgrade_head_creates_daily_unique_index(migrated_db):
         "select sql from sqlite_master where type='index' and name='uq_review_daily'"
     ).fetchone()
     assert row is not None
-    assert "date(created_at)" in row[0]
+    # 按北京日切天（库存 UTC）
+    assert "date(created_at, '+8 hours')" in row[0]
     assert row[0].startswith("CREATE UNIQUE INDEX")
 
 

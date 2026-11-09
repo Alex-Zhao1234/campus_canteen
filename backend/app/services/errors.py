@@ -14,3 +14,15 @@ class AuthError(Exception):
 
 class BadRequestError(Exception):
     """400：请求语义上不合法（如非校园邮箱）。"""
+
+
+class ForbiddenError(Exception):
+    """403：已登录但无权操作该资源。"""
+
+
+class ConflictError(Exception):
+    """409：与现有状态冲突（如当天已评价过该菜）。"""
+
+
+class RateLimitError(Exception):
+    """429：超出频率/配额限制。"""

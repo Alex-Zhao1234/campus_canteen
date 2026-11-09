@@ -3,12 +3,15 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Canteen, Dish, DishStats, Stall, StallStats
+from app.models import Campus, Canteen, Dish, DishStats, Stall, StallStats
 
 
 class OrgRepository:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
+
+    async def first_campus_id(self) -> int | None:
+        return await self.session.scalar(select(Campus.id).order_by(Campus.id).limit(1))
 
     async def list_canteens(self, campus_id: int | None = None) -> list[Canteen]:
         stmt = select(Canteen).where(Canteen.is_active.is_(True)).order_by(Canteen.id)

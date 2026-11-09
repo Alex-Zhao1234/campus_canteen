@@ -25,3 +25,12 @@ def aggregate_score(weighted: list[tuple[float, float]]) -> float:
     num = sum(b * w for b, w in weighted)
     den = sum(w for _, w in weighted) + BAYES_K
     return num / den if den else 0.0
+
+
+# 随机推荐（7.4 第一阶段）：softmax 温度、备选数、排除近 N 天评过的菜
+RANDOM_TEMPERATURE = 0.5
+RANDOM_ALTERNATES = 2
+RECENT_REVIEWED_EXCLUDE_DAYS = 3
+# 黄牌窗口条件（7.3 bad_surge 黄牌）：近 24h bad ≥ 3 且占比 ≥ 50%
+ALERT_YELLOW_BAD_COUNT = 3
+ALERT_YELLOW_BAD_RATIO = 0.5

@@ -29,4 +29,6 @@
 - 已有：一键评价 `POST /reviews`（201）、`DELETE /reviews/{id}`（软删 is_hidden）、`GET /me/reviews`、`GET /tags`。规则：菜品需在售（404）、标签 code 需存在（400）、单人单菜单日一评由唯一索引保证、服务层把 `IntegrityError` 翻译成 409、单日上限 15 条（429）。写入后就地重算该菜/该窗口的 stats：`app/recommender/stats.py` 纯函数（`compute_dish_metrics` / `compute_stall_metrics`，隐藏评价不计），榜单任务要复用它，不要再写一套公式。
 - 注意：`review.created_at` 存 UTC，"一天"按北京日切（索引 `date(created_at, '+8 hours')`，迁移 b2c3d4e5f6a7；服务层 `beijing_day_start_utc`）。
 - 已有：榜单任务 `app/tasks/rankings.py` 的 `rebuild_rankings(session)`：全量重算在售菜/在营窗口的 stats（时间衰减靠它生效）→ 每个校区 × (全部食堂 + 每个食堂) 生成 good/bad 快照写 `ranking_snapshot`，同一维度只留最新一份，`delta` 对比上一份。纯函数在 `recommender/ranking.py`（好评榜只收正分、踩雷榜 < −0.3、冷启动门槛 1 条、每榜 20 条，常量在 `scoring.py`）。调度在 `core/scheduler.py`（APScheduler，lifespan 启停，启动即跑一次，`SCHEDULER_ENABLED` / `RANKING_INTERVAL_MINUTES`），手动 `make rankings`。`GET /rankings/today?type=good|bad&canteen_id=&campus_id=` 只读快照并关联菜名/窗口名，无快照返回空列表。餐段维度、新菜榜、上升榜未做。
-- 下一步：随机推荐 `GET /recommend/random?canteen_id=&budget=&spicy=&veg=` → 前端页面（窗口列表、一键评价、今日榜单、随机推荐）。
+- 已有：随机推荐 `GET /recommend/random?canteen_id=&campus_id=&budget=&spicy=&veg=&exclude=1,2`：硬约束过滤 → 排除黄牌窗口（`stall_stats` 现算 7.3 条件，`stall_alert` 表未建）与 `score_7d < −0.3` 的菜 → 登录用户再排除近 3 天评过的 → `softmax(score_7d/0.5)` 不放回抽 1 主推 + 2 备选；无候选返回 `pick: null`。纯函数 `recommender/random_pick.py`，常量在 `scoring.py`。公开接口的可选登录用 `user: OptionalUser`（无效 token 按游客）。
+- **MVP 后端四件事接口已齐**（窗口列表 / 一键评价 / 今日榜单 / 随机推荐）。
+- 下一步：前端页面（React + TanStack Query + Zustand）：首页榜单、食堂→窗口→菜品、一键评价组件 RatingQuickBar、随机推荐 RandomPicker、邮箱验证码登录。

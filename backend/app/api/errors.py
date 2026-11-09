@@ -4,7 +4,7 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.responses import JSONResponse
 
-from app.services.errors import NotFoundError
+from app.services.errors import AuthError, BadRequestError, NotFoundError
 
 
 def _envelope(status: int, msg: str) -> JSONResponse:
@@ -15,6 +15,14 @@ def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(NotFoundError)
     async def _not_found(_: Request, exc: NotFoundError) -> JSONResponse:
         return _envelope(404, str(exc))
+
+    @app.exception_handler(AuthError)
+    async def _auth(_: Request, exc: AuthError) -> JSONResponse:
+        return _envelope(401, str(exc))
+
+    @app.exception_handler(BadRequestError)
+    async def _bad_request(_: Request, exc: BadRequestError) -> JSONResponse:
+        return _envelope(400, str(exc))
 
     @app.exception_handler(HTTPException)
     async def _http(_: Request, exc: HTTPException) -> JSONResponse:

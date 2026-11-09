@@ -6,3 +6,11 @@ class NotFoundError(Exception):
         super().__init__(f"{what}不存在：id={ident}")
         self.what = what
         self.ident = ident
+
+
+class AuthError(Exception):
+    """401：未登录、token 无效/过期、验证码错误。"""
+
+
+class BadRequestError(Exception):
+    """400：请求语义上不合法（如非校园邮箱）。"""

@@ -20,5 +20,6 @@
 - 后端测试用 pytest + httpx AsyncClient，测试库用内存 SQLite。
 
 ## 当前状态
-- 已有：架构文档、项目骨架、`/api/v1/health`、前端空壳页。
-- 下一步：按 docs 第 5 章建 ORM 模型 → Alembic 初始迁移 → 种子导入（`app/tasks/seed.py`）→ 组织结构接口 → 一键评价接口 → 榜单任务。
+- 已有：架构文档、项目骨架、`/api/v1/health`、前端空壳页、项目介绍页（`docs/showcase/`）。
+- 已有：MVP 所需 11 张表的 ORM 模型（`app/models/`：org / user / review / stats），测试用内存 SQLite（`tests/conftest.py` 的 `db` / `client` fixture）。M2+ 的表（price_history、review_image、stall_alert、user_dish_pref、向量表）尚未建。
+- 下一步：Alembic 初始迁移（注意 `uq_review_daily` 是函数索引，需手写）→ 种子导入（`app/tasks/seed.py`）→ 组织结构接口 → 一键评价接口 → 榜单任务。

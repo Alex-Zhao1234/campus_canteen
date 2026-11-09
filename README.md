@@ -1,6 +1,6 @@
 # 校园食堂点评推荐系统
 
-面向大学生的食堂**菜品级**点评与推荐工具。核心取向：**避雷优先、5 秒评价、天级时效**。完整架构见 `docs/架构设计.md`，项目介绍页见 https://claude.ai/artifact/9oBEZPyiWA3QHYsiHH4mdt （源码 `docs/showcase/index.html`）。
+面向大学生的食堂**菜品级**点评与推荐工具。核心取向：**避雷优先、5 秒评价、天级时效**。仓库：https://github.com/Alex-Zhao1234/campus_canteen 。完整架构见 `docs/架构设计.md`，项目介绍页见 https://claude.ai/artifact/9oBEZPyiWA3QHYsiHH4mdt （源码 `docs/showcase/index.html`）。
 
 ## 现状
 

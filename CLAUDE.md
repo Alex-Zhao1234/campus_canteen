@@ -24,4 +24,5 @@
 - 已有：MVP 所需 11 张表的 ORM 模型（`app/models/`：org / user / review / stats），测试用内存 SQLite（`tests/conftest.py` 的 `db` / `client` fixture）。M2+ 的表（price_history、review_image、stall_alert、user_dish_pref、向量表）尚未建。
 - 已有：Alembic 迁移（`backend/alembic/`），表结构不再由 create_all 建，启动前 `make migrate`。改模型后 `make migration m="说明"` 生成脚本，注意 autogenerate 识别不了函数索引 `uq_review_daily`，不要在新迁移里误删；`tests/test_migrations.py` 会校验迁移与模型一致。
 - 已有：种子导入（`app/tasks/seed.py`，`make seed`）：附录 A 的 14 个预设标签 + 附录 B 格式的 CSV 按名字 get-or-create 校区/食堂/窗口/菜品，幂等可重复执行。
-- 下一步：组织结构接口（`/canteens`、`/canteens/{id}/stalls`、`/stalls/{id}`、`/dishes/{id}`）→ 一键评价接口 → 榜单任务。
+- 已有：组织结构只读接口 `GET /canteens`、`/canteens/{id}/stalls`、`/stalls/{id}`、`/dishes/{id}`，分层 api(`api/v1/*.py`) → services(`org_service.py`) → repositories(`org_repo.py`)；依赖注入用 `Annotated` 风格（`app/api/deps.py` 的 `OrgServiceDep`）；响应壳 `schemas/common.py` 的 `Envelope`/`ok`，业务异常 `services/errors.py` 由 `api/errors.py` 统一转成壳（404/422 也是壳）。列表接口只返回 is_active 的记录，stats 缺失时给全零。
+- 下一步：一键评价接口（`POST /reviews`，需要先有最简用户/鉴权）→ 榜单任务 → 随机推荐。

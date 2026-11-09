@@ -33,4 +33,6 @@
 - **MVP 后端四件事接口已齐**（窗口列表 / 一键评价 / 今日榜单 / 随机推荐）。
 - 已有：前端浏览链路（只读）。`src/types/api.ts` 与后端 schema 一一对应；`src/api/` 按资源封装，`client.ts` 自动带 token、401 时清登录态；服务端状态全走 `src/hooks/queries.ts`（queryKey 集中在 `keys`，评价提交后按键 invalidate）；本地状态 `src/stores/auth.ts`（persist）/ `ui.ts`（当前食堂）。页面：`/` 榜单（食堂 chips + 好评/踩雷 Tab）、`/canteens`、`/canteen/:id`（按楼层分组）、`/stall/:id`（菜品卡片，评价组件留位）、`/dish/:id`、`/me` 占位；`Layout` 顶栏 + 底部三 Tab；`ScoreBadge` 统一分数展示。`@/` 别名在 tsconfig 与 vite.config 两处。样式只用 `index.css`，无 UI 库，无 ESLint 依赖。
 - 已有：前端登录（`/login`，邮箱验证码，开发模式自动填入 `dev_code`，`?next=` 回跳）与一键评价 `components/RatingQuickBar.tsx`。状态机 idle → tagging(3 秒倒计时，最多 3 标签，点标签重置) → submitting → done；**取舍：表情点击只高亮，请求在标签窗口结束时一次性发出**（保持 review append-only，不需要 PATCH）。`hooks/useSubmitReview.ts` 乐观 +1 评价数 → 成功后用响应里的 `dish_stats` 覆盖 → settled 失效 stall/dish/rankings/myReviews。409 置 done 并提示；401 跳登录。全局提示 `stores/toast.ts` + `components/Toaster.tsx`。已嵌入窗口页每张菜品卡与菜品详情页。
-- 下一步：前端第三步——`RandomPicker`（抽屉、预算/辣度/素食 chip、换一个）+ 我的评价列表与删除。之后：展示页更新、部署。
+- 已有：随机推荐 `components/RandomPicker.tsx`（首页浮动按钮 → 底部抽屉；食堂/预算/辣度/素食 chip 存 `useUiStore` 持久化；`hooks/useRandomPick.ts` 不走缓存，`exclude` 累积已看过的 id，候选用尽清空重来）；我的评价（`/me`，`hooks/useMyReviews.ts` 列表 + 删除 mutation，乐观移除、settled 失效 stall/dish/rankings）。
+- **MVP 前后端四件事全部完成**。
+- 下一步：收尾——README 更新、展示页 `docs/showcase/index.html` 补真实截图与说明、部署方案（docker-compose）。之后进入 M2（预警 stall_alert、价格历史、评价流、搜索）。

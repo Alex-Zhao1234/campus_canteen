@@ -145,3 +145,34 @@ export interface MyReview {
   tags: Tag[];
   created_at: string;
 }
+
+/* ---------- 随机推荐 ---------- */
+
+export interface RecommendItem {
+  dish_id: number;
+  dish_name: string;
+  stall_id: number;
+  stall_name: string;
+  canteen_id: number;
+  canteen_name: string;
+  price_cents: number;
+  spicy_level: number;
+  is_veg: boolean;
+  score_7d: number;
+  review_count_7d: number;
+}
+
+export interface RandomRecommend {
+  pick: RecommendItem | null;
+  alternates: RecommendItem[];
+  candidate_count: number;
+}
+
+export interface RecommendFilters {
+  canteenId: number | null;
+  /** 最高价（分），null 不限 */
+  budget: number | null;
+  /** 最高辣度 0-3，null 不限 */
+  spicy: number | null;
+  veg: boolean;
+}

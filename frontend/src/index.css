@@ -151,3 +151,35 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .toast { pointer-events: auto; max-width: 100%; padding: .6rem 1rem; border-radius: .75rem; background: var(--fg); color: var(--bg); font-size: .9rem; box-shadow: 0 4px 16px rgba(0,0,0,.2); animation: slide-down .2s ease-out; }
 .toast-good { background: var(--good); color: #fff; } .toast-bad { background: var(--bad); color: #fff; }
 @keyframes slide-down { from { transform: translateY(-8px); opacity: 0; } }
+
+/* ---------- 随机推荐 ---------- */
+.fab {
+  position: fixed; right: max(1rem, calc((100vw - 640px) / 2 + 1rem)); bottom: calc(4.5rem + env(safe-area-inset-bottom)); z-index: 15;
+  padding: .8rem 1.1rem; border-radius: 999px; background: var(--accent); color: #fff; font-weight: 700;
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.fab:active { transform: scale(.96); }
+.picker { max-height: 90dvh; display: flex; flex-direction: column; }
+.sheet-head.row { flex-direction: row; align-items: center; justify-content: space-between; }
+.close { font-size: 1.1rem; color: var(--muted); padding: .25rem .5rem; }
+.filters { display: flex; flex-direction: column; gap: .35rem; margin-bottom: .75rem; }
+.filters .chips { margin: 0; }
+.pick-body { flex: 1; overflow-y: auto; min-height: 10rem; margin-bottom: .75rem; }
+.pick-card {
+  display: flex; flex-direction: column; gap: .25rem; padding: .85rem 1rem; border-radius: .9rem;
+  background: color-mix(in srgb, var(--fg) 4%, transparent);
+}
+.pick-card small { color: var(--muted); font-size: .8rem; }
+.pick-card.big { padding: 1.25rem; margin-bottom: .6rem; background: color-mix(in srgb, var(--accent) 10%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); }
+.pick-card.big strong { font-size: 1.35rem; }
+.alternates { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+.alternates .pick-card strong { font-size: .95rem; }
+.primary.inline { display: inline-block; width: auto; margin-top: .75rem; }
+
+/* ---------- 我的评价 ---------- */
+.review { align-items: flex-start; }
+.review-emoji { font-size: 1.5rem; line-height: 1.2; }
+.mini-tags { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .2rem; }
+.mini-tags span { padding: .1rem .5rem; border-radius: 999px; font-size: .7rem; background: color-mix(in srgb, var(--fg) 8%, transparent); color: var(--muted); }
+.link-btn { color: var(--bad); font-size: .85rem; padding: .25rem; }
+.link-btn:disabled { opacity: .5; }

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useCanteens, useRanking } from "@/hooks/queries";
 import { useUiStore } from "@/stores/ui";
+import { RandomPicker } from "@/components/RandomPicker";
 import { ScoreBadge } from "@/components/ScoreBadge";
 import { Empty, ErrorState, Loading } from "@/components/State";
 import { formatPrice, formatTime } from "@/lib/format";
@@ -75,6 +76,7 @@ export function Home() {
       {ranking.data?.generated_at && (
         <p className="footnote">榜单更新于 {formatTime(ranking.data.generated_at)}，每 10 分钟重算</p>
       )}
+      <RandomPicker />
     </>
   );
 }

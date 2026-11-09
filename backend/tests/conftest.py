@@ -3,8 +3,19 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from app.core.config import get_settings
 from app.core.database import Base, get_db, make_engine
 from app.main import app
+
+
+@pytest.fixture(autouse=True)
+def _pinned_settings():
+    """测试不受本地 .env 影响：固定认证相关开关，用完还原。"""
+    s = get_settings()
+    saved = (s.auth_code_required, s.auth_echo_code, s.scheduler_enabled)
+    s.auth_code_required, s.auth_echo_code, s.scheduler_enabled = True, True, False
+    yield
+    s.auth_code_required, s.auth_echo_code, s.scheduler_enabled = saved
 
 
 @pytest.fixture

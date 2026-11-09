@@ -10,6 +10,7 @@ from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.database import engine
 from app.core.scheduler import start_scheduler, stop_scheduler
+from app.core.static import mount_static
 
 settings = get_settings()
 
@@ -38,3 +39,5 @@ app.add_middleware(
 
 register_exception_handlers(app)
 app.include_router(api_router)
+# 必须放在 api_router 之后：兜底路由把其余路径交给前端
+mount_static(app, settings.static_dir)

@@ -36,6 +36,10 @@ make up                     # 构建并后台启动，首次需要几分钟
 
 打开 http://localhost 。容器启动时会自动迁移数据库并导入 `data/seed/dishes.csv`。`make logs` 看日志，`make down` 停止。
 
+### 方式一点五：Render 免费托管（公网演示）
+
+仓库根目录有 `render.yaml` 和单容器 `Dockerfile`。在 https://render.com 用 GitHub 登录 → New → Blueprint → 选本仓库 → Apply。免费实例 15 分钟无访问会休眠（冷启动约 1 分钟），磁盘不持久，重启后评价数据回到种子状态。
+
 ### 方式二：本地开发
 
 ```bash

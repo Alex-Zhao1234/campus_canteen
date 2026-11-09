@@ -1,0 +1,27 @@
+# Render 部署蓝图：New → Blueprint → 选本仓库 → Apply 即可。
+# 免费实例：15 分钟无访问会休眠（冷启动约 1 分钟）；磁盘不持久，重启后评价数据回到种子状态。
+services:
+  - type: web
+    name: campus-canteen
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: AUTH_CODE_REQUIRED
+        value: "false"          # 演示模式：输入校园邮箱按回车直接登录
+      - key: AUTH_ECHO_CODE
+        value: "false"
+      - key: ALLOWED_EMAIL_DOMAINS
+        value: edu.cn
+      - key: SCHEDULER_ENABLED
+        value: "true"
+      - key: RANKING_INTERVAL_MINUTES
+        value: "10"
+      - key: EMBEDDING_BACKEND
+        value: none

@@ -7,12 +7,15 @@ class SendCodeIn(BaseModel):
 
 class SendCodeOut(BaseModel):
     sent: bool
+    # false 时前端直接调 verify（不带 code）即可登录
+    code_required: bool = True
     dev_code: str | None = None
 
 
 class VerifyIn(BaseModel):
     email: str = Field(min_length=3, max_length=100)
-    code: str = Field(min_length=6, max_length=6)
+    # AUTH_CODE_REQUIRED=false 时可省略
+    code: str | None = Field(default=None, min_length=6, max_length=6)
 
 
 class RefreshIn(BaseModel):

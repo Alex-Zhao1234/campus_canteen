@@ -15,19 +15,8 @@ export function Login() {
   const [params] = useSearchParams();
   const next = params.get("next") || "/me";
 
-  const send = useMutation({
-    mutationFn: () => authApi.sendCode(email.trim()),
-    onSuccess: (r) => {
-      setStep("code");
-      setDevCode(r.dev_code);
-      if (r.dev_code) setCode(r.dev_code); // 开发模式：后端回显验证码，自动填入
-      else toast("验证码已发送到邮箱", "good");
-    },
-    onError: (e) => toast(e instanceof Error ? e.message : "发送失败", "bad"),
-  });
-
   const verify = useMutation({
-    mutationFn: () => authApi.verify(email.trim(), code.trim()),
+    mutationFn: (c?: string) => authApi.verify(email.trim(), c),
     onSuccess: (r) => {
       login(r.access_token, r.refresh_token, r.user);
       toast(`欢迎，${r.user.nickname}`, "good");
@@ -36,12 +25,27 @@ export function Login() {
     onError: (e) => toast(e instanceof Error ? e.message : "验证失败", "bad"),
   });
 
+  const send = useMutation({
+    mutationFn: () => authApi.sendCode(email.trim()),
+    onSuccess: (r) => {
+      if (!r.code_required) {
+        verify.mutate(undefined); // 邮件服务关闭：按一次回车直接登录
+        return;
+      }
+      setStep("code");
+      setDevCode(r.dev_code);
+      if (r.dev_code) setCode(r.dev_code); // 开发模式：后端回显验证码，自动填入
+      else toast("验证码已发送到邮箱", "good");
+    },
+    onError: (e) => toast(e instanceof Error ? e.message : "发送失败", "bad"),
+  });
+
   return (
     <form
       className="form"
       onSubmit={(e) => {
         e.preventDefault();
-        step === "email" ? send.mutate() : verify.mutate();
+        step === "email" ? send.mutate() : verify.mutate(code.trim());
       }}
     >
       <h2 className="page-title">校园邮箱登录</h2>
@@ -78,7 +82,7 @@ export function Login() {
       )}
 
       <button className="primary block" type="submit" disabled={send.isPending || verify.isPending}>
-        {step === "email" ? (send.isPending ? "发送中…" : "发送验证码") : verify.isPending ? "登录中…" : "登录"}
+        {send.isPending || verify.isPending ? "登录中…" : step === "email" ? "登录" : "确认验证码"}
       </button>
       {step === "code" && (
         <button type="button" className="ghost block" onClick={() => setStep("email")}>

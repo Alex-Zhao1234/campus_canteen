@@ -22,3 +22,5 @@ data/images/
 .idea/
 *.egg-info/
 frontend/tsconfig.tsbuildinfo
+# 用户的问题截图等临时文件
+docs/问题汇报/

@@ -30,7 +30,7 @@ MVP 四件事前后端均已完成，本地可跑：
 需要 Docker Desktop（WSL 用户在 Settings → Resources → WSL integration 里勾选发行版）。
 
 ```bash
-cp .env.example .env        # 按需改 SECRET_KEY；本地体验保持 AUTH_ECHO_CODE=true 才能拿到验证码
+cp .env.example .env        # 按需改 SECRET_KEY；本地体验设 AUTH_CODE_REQUIRED=false 可免验证码登录
 make up                     # 构建并后台启动，首次需要几分钟
 ```
 
@@ -45,7 +45,7 @@ make dev-api                # 终端 1：后端  http://localhost:8000/docs
 make dev-web                # 终端 2：前端  http://localhost:5173
 ```
 
-登录时用任意 `xxx@xxx.edu.cn` 邮箱，开发模式下验证码会直接显示在页面上。
+登录时用任意 `xxx@xxx.edu.cn` 邮箱。`AUTH_CODE_REQUIRED=false` 时按回车直接登录；为 `true` 且 `AUTH_ECHO_CODE=true` 时验证码会直接填到页面上。
 
 ## 常用命令
 
@@ -66,7 +66,8 @@ make dev-web                # 终端 2：前端  http://localhost:5173
 | `DATABASE_URL` | 默认 `sqlite+aiosqlite:///../data/canteen.db` |
 | `SECRET_KEY` | JWT 签名密钥，**生产必改** |
 | `ALLOWED_EMAIL_DOMAINS` | 允许登录的邮箱域名，逗号分隔 |
-| `AUTH_ECHO_CODE` | `true` 时验证码直接回传在接口响应里（没有邮件服务时的开发模式），**生产必须 false** |
+| `AUTH_CODE_REQUIRED` | `false` = 邮件服务关闭，输入校园邮箱按回车直接登录，不发验证码（内测/演示用，**身份未验证**）；接上邮件服务后改回 `true` |
+| `AUTH_ECHO_CODE` | 需要验证码但没有邮件服务时的开发模式：验证码直接回传在接口响应里，**生产必须 false** |
 | `SCHEDULER_ENABLED` / `RANKING_INTERVAL_MINUTES` | 榜单定时任务开关与间隔 |
 | `WEB_PORT` | Docker 对外端口，默认 80 |
 

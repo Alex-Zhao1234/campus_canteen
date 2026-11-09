@@ -99,6 +99,8 @@ export interface TokenPair {
 
 export interface SendCodeOut {
   sent: boolean;
+  /** false：邮件服务关闭，直接调 verify（不带 code）即可登录 */
+  code_required: boolean;
   /** 开发模式（AUTH_ECHO_CODE=true）后端直接回传验证码 */
   dev_code: string | null;
 }

@@ -9,7 +9,8 @@ services:
       DATABASE_URL: sqlite+aiosqlite:///../data/canteen.db
       SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
       ALLOWED_EMAIL_DOMAINS: ${ALLOWED_EMAIL_DOMAINS:-edu.cn}
-      AUTH_ECHO_CODE: ${AUTH_ECHO_CODE:-false}     # 生产没有邮件服务前只能 true，但务必知道风险
+      AUTH_CODE_REQUIRED: ${AUTH_CODE_REQUIRED:-true}   # false = 不发验证码，邮箱直接登录
+      AUTH_ECHO_CODE: ${AUTH_ECHO_CODE:-false}     # 需要验证码但没有邮件服务时的开发模式
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost}
       EMBEDDING_BACKEND: none
       SCHEDULER_ENABLED: "true"

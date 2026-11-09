@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     access_token_minutes: int = 120
     refresh_token_days: int = 30
     allowed_email_domains: str = "edu.cn"
+    # 是否需要验证码。false = 邮件服务关闭，输入校园邮箱直接登录（内测/演示用，身份未验证）
+    auth_code_required: bool = True
     # 开发模式：没有邮件服务，验证码直接在 send-code 响应里回传。生产必须关掉
     auth_echo_code: bool = True
     embedding_backend: str = "none"  # none | local | openai

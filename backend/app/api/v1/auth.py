@@ -18,7 +18,11 @@ router = APIRouter(prefix="/auth")
 @router.post("/send-code", response_model=Envelope[SendCodeOut])
 async def send_code(body: SendCodeIn, svc: AuthServiceDep):
     result = svc.send_code(body.email)
-    return ok(SendCodeOut(sent=result.sent, dev_code=result.dev_code))
+    return ok(
+        SendCodeOut(
+            sent=result.sent, code_required=result.code_required, dev_code=result.dev_code
+        )
+    )
 
 
 @router.post("/verify", response_model=Envelope[TokenOut])

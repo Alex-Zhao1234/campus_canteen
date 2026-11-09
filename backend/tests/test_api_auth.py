@@ -126,3 +126,42 @@ async def test_refresh_token_cannot_access_api(client):
     data = await _login(client)
     r = await client.get("/api/v1/me", headers={"Authorization": f"Bearer {data['refresh_token']}"})
     assert r.status_code == 401
+
+
+# ---------- 验证码开关：AUTH_CODE_REQUIRED=false 时按回车直接登录 ----------
+
+
+@pytest.fixture
+def code_not_required():
+    from app.core.config import get_settings
+
+    settings = get_settings()
+    settings.auth_code_required = False
+    yield
+    settings.auth_code_required = True
+
+
+async def test_send_code_skips_code_when_not_required(client, code_not_required):
+    r = await client.post("/api/v1/auth/send-code", json={"email": EMAIL})
+    assert r.status_code == 200
+    data = r.json()["data"]
+    assert data == {"sent": False, "code_required": False, "dev_code": None}
+
+
+async def test_verify_without_code_logs_in_when_not_required(client, code_not_required):
+    r = await client.post("/api/v1/auth/verify", json={"email": EMAIL})
+    assert r.status_code == 200, r.text
+    assert r.json()["data"]["access_token"]
+    # 域名限制仍然生效
+    r = await client.post("/api/v1/auth/verify", json={"email": "a@gmail.com"})
+    assert r.status_code == 400
+
+
+async def test_verify_without_code_rejected_when_required(client):
+    r = await client.post("/api/v1/auth/verify", json={"email": EMAIL})
+    assert r.status_code == 401
+
+
+async def test_send_code_reports_code_required_by_default(client):
+    r = await client.post("/api/v1/auth/send-code", json={"email": EMAIL})
+    assert r.json()["data"]["code_required"] is True

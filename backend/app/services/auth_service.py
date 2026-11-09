@@ -69,6 +69,7 @@ def hash_email(email: str) -> str:
 @dataclass
 class SendCodeResult:
     sent: bool
+    code_required: bool
     dev_code: str | None
 
 
@@ -84,22 +85,35 @@ class AuthService:
         self.users = users
         self.store = store
 
-    def send_code(self, email: str) -> SendCodeResult:
-        email = normalize_email(email)
+    @staticmethod
+    def _check_domain(email: str) -> None:
         settings = get_settings()
         domain = email.rsplit("@", 1)[-1] if "@" in email else ""
         if not any(
             domain == d or domain.endswith("." + d) for d in settings.allowed_email_domain_list
         ):
             raise BadRequestError("请使用校园邮箱登录")
+
+    def send_code(self, email: str) -> SendCodeResult:
+        email = normalize_email(email)
+        settings = get_settings()
+        self._check_domain(email)
+        if not settings.auth_code_required:
+            # 邮件服务关闭：不发码，前端直接调 verify
+            return SendCodeResult(sent=False, code_required=False, dev_code=None)
         code = self.store.issue(email)
         # 真实邮件发送在此接入；MVP 开发模式直接回传
-        return SendCodeResult(sent=True, dev_code=code if settings.auth_echo_code else None)
+        return SendCodeResult(
+            sent=True, code_required=True, dev_code=code if settings.auth_echo_code else None
+        )
 
-    async def verify(self, email: str, code: str) -> LoginResult:
+    async def verify(self, email: str, code: str | None) -> LoginResult:
         email = normalize_email(email)
-        if not self.store.verify(email, code):
-            raise AuthError("验证码错误或已过期")
+        if get_settings().auth_code_required:
+            if code is None or not self.store.verify(email, code):
+                raise AuthError("验证码错误或已过期")
+        else:
+            self._check_domain(email)
         user = await self.users.get_by_email_hash(hash_email(email))
         if user is None:
             campus_id = await self.users.first_campus_id()

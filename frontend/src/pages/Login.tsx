@@ -5,8 +5,11 @@ import { authApi } from "@/api/auth";
 import { useAuthStore } from "@/stores/auth";
 import { toast } from "@/stores/toast";
 
+/** 演示环境固定账号：登录页预填，直接回车即可进入 */
+const DEMO_EMAIL = "you@zxx.edu.cn";
+
 export function Login() {
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(DEMO_EMAIL);
   const [code, setCode] = useState("");
   const [devCode, setDevCode] = useState<string | null>(null);
   const [step, setStep] = useState<"email" | "code">("email");
@@ -63,6 +66,7 @@ export function Login() {
           onChange={(e) => setEmail(e.target.value)}
           required
         />
+        <small className="hint muted">固定演示账号，{DEMO_EMAIL}</small>
       </label>
 
       {step === "code" && (

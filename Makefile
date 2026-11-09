@@ -1,4 +1,4 @@
-.PHONY: setup dev-api dev-web test lint seed migrate migration
+.PHONY: setup dev-api dev-web test lint seed rankings migrate migration
 
 setup:
 	./setup.sh
@@ -17,6 +17,10 @@ lint:
 
 seed:
 	cd backend && .venv/bin/python -m app.tasks.seed ../data/seed/dishes.csv
+
+# 手动重算 stats 并生成榜单快照（服务运行时每 10 分钟自动跑）
+rankings:
+	cd backend && .venv/bin/python -m app.tasks.rankings
 
 # 升级数据库到最新迁移
 migrate:

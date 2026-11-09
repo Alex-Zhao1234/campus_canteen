@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -8,14 +9,20 @@ from app.api.errors import register_exception_handlers
 from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.database import engine
+from app.core.scheduler import start_scheduler, stop_scheduler
 
 settings = get_settings()
+
+# uvicorn 只配置自己的 logger；应用与 APScheduler 的 INFO 日志需要自己接上
+logging.basicConfig(level=logging.INFO, format="%(levelname)s:     %(name)s - %(message)s")
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     # 表结构由 Alembic 管理：启动前执行 `make migrate`（alembic upgrade head）
+    start_scheduler()
     yield
+    stop_scheduler()
     await engine.dispose()
 
 

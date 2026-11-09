@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1 import auth, canteens, dishes, health, me, reviews, stalls, tags
+from app.api.v1 import auth, canteens, dishes, health, me, rankings, reviews, stalls, tags
 
 api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(health.router, tags=["health"])
@@ -11,4 +11,5 @@ api_router.include_router(auth.router, tags=["auth"])
 api_router.include_router(me.router, tags=["me"])
 api_router.include_router(reviews.router, tags=["reviews"])
 api_router.include_router(tags.router, tags=["tags"])
-# 后续：rankings / recommend
+api_router.include_router(rankings.router, tags=["rankings"])
+# 后续：recommend

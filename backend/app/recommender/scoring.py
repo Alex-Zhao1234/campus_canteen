@@ -8,6 +8,11 @@ BAYES_K = 2.0
 # 统计窗口：菜品/窗口的"近期"评分看 7 天，窗口预警看 24 小时
 RECENT_WINDOW_DAYS = 7
 ALERT_WINDOW_HOURS = 24
+# 榜单（7.2）：上榜门槛、冷启动阈值、踩雷榜分数上限、每榜条数
+RANK_MIN_REVIEWS = 3
+COLD_START_TOTAL_REVIEWS = 500
+BAD_RANK_MAX_SCORE = -0.3
+RANK_SIZE = 20
 
 
 def time_weight(created_at: datetime, now: datetime, trust_score: float = 1.0) -> float:

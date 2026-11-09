@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     auth_echo_code: bool = True
     embedding_backend: str = "none"  # none | local | openai
     cors_origins: str = "http://localhost:5173"
+    # 定时任务：榜单重算间隔；测试/脚本环境可关掉调度器
+    scheduler_enabled: bool = True
+    ranking_interval_minutes: int = 10
 
     @property
     def allowed_email_domain_list(self) -> list[str]:

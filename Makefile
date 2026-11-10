@@ -16,7 +16,7 @@ lint:
 	cd backend && .venv/bin/ruff check app tests
 
 seed:
-	cd backend && .venv/bin/python -m app.tasks.seed ../data/seed/dishes.csv
+	cd backend && .venv/bin/python -m app.tasks.seed ../data/seed/dishes.csv ../data/seed/seats.csv
 
 # 手动重算 stats 并生成榜单快照（服务运行时每 10 分钟自动跑）
 rankings:

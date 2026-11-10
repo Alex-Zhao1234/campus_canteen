@@ -5,7 +5,11 @@ echo "==> alembic upgrade head"
 alembic upgrade head
 if [ -f ../data/seed/dishes.csv ]; then
   echo "==> seed"
-  python -m app.tasks.seed ../data/seed/dishes.csv
+  if [ -f ../data/seed/seats.csv ]; then
+    python -m app.tasks.seed ../data/seed/dishes.csv ../data/seed/seats.csv
+  else
+    python -m app.tasks.seed ../data/seed/dishes.csv
+  fi
 fi
 if [ "${SEED_DEMO_REVIEWS:-false}" = "true" ]; then
   echo "==> demo reviews"

@@ -4,8 +4,8 @@ from pathlib import Path
 
 from sqlalchemy import func, select
 
-from app.models import Campus, Canteen, Dish, Stall, Tag
-from app.tasks.seed import PRESET_TAGS, seed_dishes, seed_tags
+from app.models import Campus, Canteen, Dish, Seat, Stall, Tag
+from app.tasks.seed import PRESET_TAGS, seed_dishes, seed_seats, seed_tags
 
 CSV_PATH = Path(__file__).resolve().parents[2] / "data" / "seed" / "dishes.csv"
 
@@ -83,3 +83,36 @@ async def test_seed_dishes_reuses_existing_canteen_under_campus(db):
     assert stats["campus"] == 0
     assert stats["canteen"] == 1  # 二食堂复用，只新建三食堂
     assert await _count(db, Canteen) == 2
+
+
+SEATS_CSV = CSV_PATH.with_name("seats.csv")
+
+
+async def test_seed_seats_creates_seats_per_floor(db):
+    await seed_dishes(db, CSV_PATH)
+    stats = await seed_seats(db, SEATS_CSV)
+    assert stats == {"seat": 600, "skipped_rows": 0}
+    assert await _count(db, Seat) == 600
+    c2 = await db.scalar(select(Canteen).where(Canteen.name == "二食堂"))
+    first = await db.scalar(select(Seat).where(Seat.code == f"C{c2.id}-1F-001"))
+    assert first is not None and first.canteen_id == c2.id and first.floor == 1
+    assert await db.scalar(select(Seat).where(Seat.code == f"C{c2.id}-3F-080")) is not None
+    assert await db.scalar(select(Seat).where(Seat.code == f"C{c2.id}-3F-081")) is None
+
+
+async def test_seed_seats_is_idempotent(db):
+    await seed_dishes(db, CSV_PATH)
+    await seed_seats(db, SEATS_CSV)
+    again = await seed_seats(db, SEATS_CSV)
+    assert again["seat"] == 0
+    assert await _count(db, Seat) == 600
+
+
+async def test_seed_seats_skips_unknown_canteen(db, tmp_path):
+    await seed_dishes(db, CSV_PATH)
+    csv_file = tmp_path / "seats.csv"
+    csv_file.write_text(
+        "canteen_name,floor,seat_count\n不存在食堂,1,10\n二食堂,1,2\n", encoding="utf-8"
+    )
+    stats = await seed_seats(db, csv_file)
+    assert stats == {"seat": 2, "skipped_rows": 1}

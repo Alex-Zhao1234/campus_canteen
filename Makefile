@@ -1,4 +1,4 @@
-.PHONY: setup dev-api dev-web test lint seed rankings migrate migration up down logs
+.PHONY: setup dev-api dev-web test lint seed rankings seat-sim migrate migration up down logs
 
 setup:
 	./setup.sh
@@ -21,6 +21,10 @@ seed:
 # 手动重算 stats 并生成榜单快照（服务运行时每 10 分钟自动跑）
 rankings:
 	cd backend && .venv/bin/python -m app.tasks.rankings
+
+# 手动跑一个座位模拟 tick（服务运行时 SEAT_SIMULATOR_ENABLED=true 每 5 秒自动跑）
+seat-sim:
+	cd backend && .venv/bin/python -m app.tasks.seat_sim
 
 # 升级数据库到最新迁移
 migrate:

@@ -8,6 +8,7 @@ EXPECTED_TABLES = {
     "user",
     "review", "tag", "review_tag",
     "dish_stats", "stall_stats", "ranking_snapshot",
+    "seat", "seat_state",
 }
 
 

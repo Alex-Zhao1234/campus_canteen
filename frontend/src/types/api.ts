@@ -197,3 +197,26 @@ export interface RecommendFilters {
   spicy: number | null;
   veg: boolean;
 }
+
+/* ---------- 座位空位 ---------- */
+
+export type SeatLevel = "unknown" | "empty" | "low" | "medium" | "high" | "full";
+
+export interface FloorOccupancy {
+  floor: number;
+  total: number;
+  occupied: number;
+  free: number;
+  /** occupied / total，3 位小数；total 为 0 时 0 */
+  ratio: number;
+  level: SeatLevel;
+  /** 该层最近一次读数（UTC naive），没有座位状态时 null */
+  updated_at: string | null;
+}
+
+export interface CanteenOccupancy {
+  canteen_id: number;
+  canteen_name: string;
+  floors: number;
+  levels: FloorOccupancy[];
+}

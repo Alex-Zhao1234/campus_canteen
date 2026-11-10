@@ -229,3 +229,32 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   background: color-mix(in srgb, var(--fg) 6%, transparent);
 }
 .thumb.placeholder { display: grid; place-items: center; font-size: 1.4rem; opacity: .6; }
+
+/* ---------- 食堂空位 ---------- */
+.seat-card {
+  display: flex; flex-direction: column; gap: .6rem; padding: .85rem 1rem; border-radius: .9rem;
+  background: color-mix(in srgb, var(--fg) 4%, transparent);
+}
+.seat-card-head { display: flex; justify-content: space-between; align-items: baseline; }
+.seat-card-head strong small { color: var(--muted); font-weight: 400; margin-left: .35rem; }
+.seat-card-head > small { color: var(--muted); font-size: .75rem; font-variant-numeric: tabular-nums; }
+.seat-floors { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .45rem; }
+.seat-floor {
+  --tone: var(--muted);
+  display: grid; grid-template-columns: 2.4rem .6rem 4rem 1fr; grid-template-rows: auto auto;
+  align-items: center; column-gap: .4rem; row-gap: .3rem; font-size: .9rem;
+}
+.seat-floor-name { font-weight: 600; }
+.seat-dot { width: .6rem; height: .6rem; border-radius: 50%; background: var(--tone); }
+.seat-level { color: var(--tone); font-weight: 600; }
+.seat-free { text-align: right; color: var(--muted); font-size: .85rem; font-variant-numeric: tabular-nums; }
+.seat-bar {
+  grid-column: 1 / -1; display: block; height: .3rem; border-radius: 999px; overflow: hidden;
+  background: color-mix(in srgb, var(--fg) 8%, transparent);
+}
+.seat-bar span { display: block; height: 100%; background: var(--tone); transition: width .6s ease; }
+.level-empty, .level-low { --tone: var(--good); }
+.level-medium { --tone: #d9a400; }
+.level-high { --tone: #e8761e; }
+.level-full { --tone: var(--bad); }
+.level-unknown { --tone: var(--muted); }

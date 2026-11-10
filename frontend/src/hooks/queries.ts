@@ -3,6 +3,7 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { orgApi } from "@/api/org";
 import { rankingsApi } from "@/api/rankings";
 import { reviewsApi } from "@/api/reviews";
+import { seatsApi } from "@/api/seats";
 import type { RankingType } from "@/types/api";
 
 export const keys = {
@@ -14,6 +15,7 @@ export const keys = {
   rankings: ["rankings"] as const,
   tags: ["tags"] as const,
   myReviews: ["me", "reviews"] as const,
+  seatOccupancy: ["seats", "occupancy"] as const,
   ranking: (type: RankingType, canteenId: number | null) =>
     ["rankings", type, canteenId] as const,
 };
@@ -46,4 +48,13 @@ export const useDishReviews = (dishId: number) =>
     queryFn: ({ pageParam }) => reviewsApi.forDish(dishId, pageParam),
     initialPageParam: null as number | null,
     getNextPageParam: (last) => last.next_before_id,
+  });
+
+/** 食堂空位：5 秒轮询，页面在后台时暂停 */
+export const useSeatOccupancy = () =>
+  useQuery({
+    queryKey: keys.seatOccupancy,
+    queryFn: seatsApi.occupancy,
+    refetchInterval: 5000,
+    refetchIntervalInBackground: false,
   });

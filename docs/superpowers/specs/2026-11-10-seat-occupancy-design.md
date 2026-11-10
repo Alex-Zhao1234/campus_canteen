@@ -4,11 +4,11 @@
 
 ## 1. 目标
 
-- 每个座位下有传感器，有人坐下即"占用"，状态上报到后端。
+- 概念：每个座位下有压力/红外传感器，有人坐下即"占用"，状态经网关汇总到后端。**本期传感器与上报链路只做概念说明，不落码**（见第 4.1 节）。
 - App 在「食堂列表页」下方新增「食堂空位」区块：每个食堂一张卡，按层显示 **占用率 + 拥挤度分层 + 剩余座位数**，5 秒内刷新。
-- 没有真实硬件，内置模拟器按餐段曲线生成座位进出，演示环境可直接看到效果。
+- 没有真实硬件，内置模拟器扮演"网关"，按餐段曲线生成座位进出直接写库，演示环境可直接看到效果。
 
-不做：座位级点阵图、历史曲线、按窗口附近找座、管理端录入座位、`seat_event` 历史流（以后做"各时段拥挤曲线"时再加）。
+不做：传感器上报 HTTP 接口与设备鉴权、座位级点阵图、历史曲线、按窗口附近找座、管理端录入座位、`seat_event` 历史流（以后做"各时段拥挤曲线"时再加）。
 
 ## 2. 数据模型（新增 2 张表，1 次 Alembic 迁移）
 
@@ -24,14 +24,14 @@
 
 索引：`ix_seat_canteen_floor (canteen_id, floor)`。
 
-`seat_state`（当前状态，传感器 upsert）
+`seat_state`（当前状态，由"读数来源"upsert：本期是模拟器，将来是传感器网关）
 
 | 字段 | 类型 | 说明 |
 |---|---|---|
 | seat_id | FK seat PK | |
 | is_occupied | bool | |
 | changed_at | datetime UTC | 最近一次状态翻转时间 |
-| updated_at | datetime UTC | 最近一次上报（心跳）时间 |
+| updated_at | datetime UTC | 最近一次读数（心跳）时间 |
 
 没有 `seat_state` 记录的座位视为空闲。每层人数不建表，查询时 `GROUP BY canteen_id, floor` 现算。
 
@@ -52,19 +52,20 @@
 
 ## 4. 接口
 
-### 4.1 传感器上报（设备鉴权）
+### 4.1 传感器接入（概念说明，本期不落码）
 
-`POST /api/v1/sensors/seat-states`
-请求头 `X-Sensor-Key: <SENSOR_API_KEY>`，不匹配或配置为空 → 401 壳。
+真实部署时的链路：
 
-```json
-{ "states": [ { "code": "C2-1F-037", "is_occupied": true, "ts": "2026-11-10T04:12:00Z" } ] }
+```
+座位传感器（压力/红外，一座一个）
+   → 楼层网关（LoRa/Zigbee 汇聚，去抖：状态持续 ≥ 10 秒才算翻转）
+   → 后端上报接口（将来：POST /api/v1/sensors/seat-states，请求头 X-Sensor-Key 设备密钥）
+   → SeatService.apply_states()  → upsert seat_state
 ```
 
-- `ts` 可选，缺省取服务器当前 UTC；单批最多 500 条（超出 422）。
-- 对每条按 `code` 找在用座位：找到则 upsert `seat_state`（`is_occupied` 变化才更新 `changed_at`，`updated_at` 每次更新）；找不到或已停用的 code 收进 `unknown_codes`，不让整批失败。
-- 响应：`{ "applied": 37, "unknown_codes": ["C9-1F-001"] }`，200。
-- 分层：`api/v1/sensors.py` → `SeatService.apply_states` → `SeatRepository`。
+- 座位编码 `seat.code`（如 `C2-1F-037`）就是传感器/网关侧配置的设备标识，两边靠它对上。
+- 上报语义：按批给出若干 `{code, is_occupied, ts}` 读数；同批同 code 以最后一条为准；未知或停用的 code 跳过不整批失败；`is_occupied` 翻转时更新 `changed_at`，每次读数都更新 `updated_at`（心跳）。
+- 本期**只实现**服务层入口 `SeatService.apply_states(readings, now)`（上面链路的最后一步），HTTP 接口、设备鉴权、去抖都不写代码。模拟器（第 5 节）直接调用该方法，扮演网关角色。将来接真硬件时只需加一个路由层文件调用同一个方法。
 
 ### 4.2 空位查询（登录用户）
 
@@ -104,7 +105,7 @@
 
    层间差异：1 层 ×1.0，2 层 ×0.9，3 层及以上 ×0.8，再加 ±0.05 随机噪声，夹到 [0, 0.98]。
 2. 对每个食堂每层：当前占用数与目标差 `gap`，本 tick 翻转 `min(|gap|, max(1, total × 0.05))` 个随机座位（朝目标方向），并额外随机翻转 1% 座位模拟进出，让高峰时也有人起身。
-3. 翻转结果走 `SeatService.apply_states`，与真实传感器同一条路径。
+3. 翻转结果走 `SeatService.apply_states`，将来真实传感器网关接入时走同一个方法。
 
 调度：`core/scheduler.py` 增加 interval job，`SEAT_SIM_INTERVAL_SECONDS`（默认 5），开关 `SEAT_SIMULATOR_ENABLED`（默认 false；render.yaml 置 true；测试固定 false）。`make seat-sim` 手动跑一个 tick。
 
@@ -127,7 +128,6 @@ canteen_name,floor,seat_count
 
 `.env.example`、`core/config.py`、`render.yaml`、`docker-compose.yml`：
 
-- `SENSOR_API_KEY`（默认空 = 上报接口关闭，返回 401；Render 用 generateValue）
 - `SEAT_SIMULATOR_ENABLED`（默认 false）
 - `SEAT_SIM_INTERVAL_SECONDS`（默认 5）
 
@@ -143,7 +143,7 @@ canteen_name,floor,seat_count
 ## 9. 测试
 
 - `tests/test_seat_levels.py`：阈值边界（0.25/0.50/0.70/0.85 各边界、total=0）。
-- `tests/test_api_sensors.py`：无 key 401、错 key 401、key 为空配置 401、正常 upsert、未知 code 进 unknown_codes、`changed_at` 只在翻转时更新、超 500 条 422。
+- `tests/test_seat_service.py`：`apply_states` 正常 upsert、未知/停用 code 进 unknown_codes、同批重复 code 取最后一条、`changed_at` 只在翻转时更新而 `updated_at` 每次更新。
 - `tests/test_api_seats.py`：未登录 401、每层聚合数字与 level 正确、无座位层 unknown、停用座位不计、停用食堂不出现、campus_id 过滤。
 - `tests/test_seat_sim.py`：目标曲线插值（午高峰 ≈0.9、凌晨 ≈0.03）、一个 tick 后占用数朝目标移动且不越界、走 apply_states。
 - `tests/test_seed.py` 增加座位幂等用例。
@@ -151,4 +151,4 @@ canteen_name,floor,seat_count
 
 ## 10. 与架构文档的关系
 
-`docs/架构设计.md` 第 5.2 节追加 `seat` / `seat_state`，第 6 节追加 `/sensors` 与 `/seats` 两组接口，第 7 章追加 7.6「座位拥挤度分层」；CLAUDE.md「当前状态」同步一条。
+`docs/架构设计.md` 第 5.2 节追加 `seat` / `seat_state`，第 6 节追加 `/seats/occupancy` 接口，第 7 章追加 7.6「座位拥挤度与传感器接入（概念）」把上面 4.1 的链路写进去并标明本期不落码；CLAUDE.md「当前状态」同步一条。

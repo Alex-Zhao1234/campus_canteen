@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 座位传感器上报 → 后端存当前状态 → App 食堂列表页按层显示占用率/拥挤度/剩余座位，5 秒刷新；内置模拟器按餐段曲线产生座位进出。
+**Goal:** 后端存座位当前状态 → App 食堂列表页按层显示占用率/拥挤度/剩余座位，5 秒刷新；内置模拟器扮演传感器网关按餐段曲线产生座位进出。**传感器硬件与上报接口只在文档里做概念说明，不落码。**
 
-**Architecture:** 新增 `seat`（静态）与 `seat_state`（当前状态）两表；`POST /sensors/seat-states` 用 `X-Sensor-Key` 鉴权批量 upsert；`GET /seats/occupancy` 按食堂 × 楼层 `GROUP BY` 现算并套用 `app/seating/levels.py` 的阈值；`app/tasks/seat_sim.py` 作为"假网关"走同一个服务方法写入；前端 TanStack Query 5 秒轮询。
+**Architecture:** 新增 `seat`（静态）与 `seat_state`（当前状态）两表；`SeatService.apply_states()` 是读数写入的唯一入口（本期只有模拟器调用，将来传感器网关的路由层也调它）；`GET /seats/occupancy` 按食堂 × 楼层 `GROUP BY` 现算并套用 `app/seating/levels.py` 的阈值；前端 TanStack Query 5 秒轮询。
 
 **Tech Stack:** FastAPI + SQLAlchemy 2.0 async + aiosqlite + Alembic + APScheduler；React 18 + TS + TanStack Query；pytest + httpx。
 
@@ -17,16 +17,16 @@
 - 时间统一 UTC naive（`app/models/_mixins.py` 的 `utcnow`），"北京时间"= UTC + 8h。
 - 表结构由 Alembic 管理，改模型必须配迁移；`tests/test_migrations.py` 校验迁移与模型一致、`downgrade base` 清空。
 - 阈值常量集中在 `app/seating/levels.py`：empty < 0.25 ≤ low < 0.50 ≤ medium < 0.70 ≤ high < 0.85 ≤ full；total == 0 → unknown。
-- 上报单批最多 500 条；`SENSOR_API_KEY` 为空时上报接口 401。
+- 不写任何 `/sensors` 路由、设备鉴权、`SENSOR_API_KEY`；传感器链路只出现在文档里。
 - 前端样式只写 `frontend/src/index.css`，无 UI 库；接口字段英文 snake_case。
 - 所有命令在 `backend/` 下用 `.venv/bin/...`（uv 管理），前端在 `frontend/` 用 npm。
 - 提交信息中文，结尾加 `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>`。
 
 ## Review Focus
 
-1. 同一批上报里同一个 `code` 出现两次（网关重发）：应以最后一条为准，`applied` 只计一次。（Task 4 测试覆盖）
-2. 带时区的 `ts`（如 `2026-11-10T12:00:00+08:00`）：应转成 UTC naive 存库，不能原样存 aware datetime。（Task 4 测试覆盖）
-3. 停用座位 `is_active=false` 仍在上报：应进 `unknown_codes`，不改状态，也不计入总数。（Task 4、Task 5 测试覆盖）
+1. 同一批读数里同一个 `code` 出现两次（将来网关重发）：应以最后一条为准，`applied` 只计一次。（Task 4 测试覆盖）
+2. 同状态重复读数（心跳）：`updated_at` 前进、`changed_at` 不动；翻转时两者一起前进。前端"x 秒前更新"依赖这个语义。（Task 4 测试覆盖）
+3. 停用座位 `is_active=false` 仍有读数：应进 `unknown_codes`，不改状态，也不计入总数。（Task 4、Task 5 测试覆盖）
 4. 食堂 `floors=3` 但 seats.csv 只给了 1、2 层：第 3 层要出现且 `level=unknown`、`total=0`，前端显示"暂无数据"而不是 NaN。（Task 5、Task 8 覆盖）
 5. 模拟器在某层 `total=0` 或目标正好等于当前占用时：不能除零、不能死循环，tick 仍成功返回。（Task 7 测试覆盖）
 
@@ -372,16 +372,14 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 - Modify: `backend/tests/conftest.py`（固定开关）
 
 **Interfaces:**
-- Produces: `Settings.sensor_api_key: str = ""`、`Settings.seat_simulator_enabled: bool = False`、`Settings.seat_sim_interval_seconds: int = 5`。
+- Produces: `Settings.seat_simulator_enabled: bool = False`、`Settings.seat_sim_interval_seconds: int = 5`。
 
 - [ ] **Step 1: 改 Settings**
 
 在 `backend/app/core/config.py` 的 `ranking_interval_minutes` 之后加：
 
 ```python
-    # 座位传感器上报鉴权（请求头 X-Sensor-Key）。为空 = 上报接口关闭（401）
-    sensor_api_key: str = ""
-    # 座位模拟器：没有真实传感器时按餐段曲线生成座位进出（演示用）
+    # 座位模拟器：没有真实传感器时扮演网关，按餐段曲线生成座位进出（演示用）
     seat_simulator_enabled: bool = False
     seat_sim_interval_seconds: int = 5
 ```
@@ -393,23 +391,21 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ```python
 @pytest.fixture(autouse=True)
 def _pinned_settings():
-    """测试不受本地 .env 影响：固定认证/调度/传感器相关开关，用完还原。"""
+    """测试不受本地 .env 影响：固定认证/调度/模拟器开关，用完还原。"""
     s = get_settings()
     saved = (
         s.auth_code_required,
         s.auth_echo_code,
         s.scheduler_enabled,
-        s.sensor_api_key,
         s.seat_simulator_enabled,
     )
-    s.auth_code_required, s.auth_echo_code, s.scheduler_enabled = True, True, False
-    s.sensor_api_key, s.seat_simulator_enabled = "test-sensor-key", False
+    s.auth_code_required, s.auth_echo_code = True, True
+    s.scheduler_enabled, s.seat_simulator_enabled = False, False
     yield
     (
         s.auth_code_required,
         s.auth_echo_code,
         s.scheduler_enabled,
-        s.sensor_api_key,
         s.seat_simulator_enabled,
     ) = saved
 ```
@@ -419,7 +415,6 @@ def _pinned_settings():
 `.env.example` 末尾追加：
 
 ```
-SENSOR_API_KEY=dev-sensor-key   # 座位传感器上报鉴权（X-Sensor-Key），为空则上报接口关闭
 SEAT_SIMULATOR_ENABLED=true     # 没有真实传感器时按餐段曲线模拟座位进出
 SEAT_SIM_INTERVAL_SECONDS=5
 ```
@@ -427,7 +422,6 @@ SEAT_SIM_INTERVAL_SECONDS=5
 `docker-compose.yml` api.environment 追加：
 
 ```yaml
-      SENSOR_API_KEY: ${SENSOR_API_KEY:-}
       SEAT_SIMULATOR_ENABLED: ${SEAT_SIMULATOR_ENABLED:-true}   # 演示：模拟座位进出
       SEAT_SIM_INTERVAL_SECONDS: ${SEAT_SIM_INTERVAL_SECONDS:-5}
 ```
@@ -435,8 +429,6 @@ SEAT_SIM_INTERVAL_SECONDS=5
 `render.yaml` envVars 追加：
 
 ```yaml
-      - key: SENSOR_API_KEY
-        generateValue: true
       - key: SEAT_SIMULATOR_ENABLED
         value: "true"         # 没有真实传感器，模拟座位进出
       - key: SEAT_SIM_INTERVAL_SECONDS
@@ -452,213 +444,153 @@ Expected: all passed
 
 ```bash
 git add backend/app/core/config.py backend/tests/conftest.py .env.example docker-compose.yml render.yaml
-git commit -m "chore(seat): 传感器密钥与座位模拟器配置项
+git commit -m "chore(seat): 座位模拟器配置项
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ```
 
 ---
 
-### Task 4: 传感器上报接口 `POST /sensors/seat-states`
+### Task 4: 座位读数写入服务 `SeatService.apply_states`
+
+> 概念上这是"传感器网关 → 后端"链路的最后一步。本期没有 HTTP 上报接口、没有设备鉴权，唯一调用方是 Task 7 的模拟器；将来接真硬件时加一个路由层文件调用同一个方法即可。
 
 **Files:**
 - Create: `backend/app/schemas/seat.py`
 - Create: `backend/app/repositories/seat_repo.py`
 - Create: `backend/app/services/seat_service.py`
-- Create: `backend/app/api/v1/sensors.py`
-- Modify: `backend/app/api/deps.py`
-- Modify: `backend/app/api/v1/router.py`
-- Test: `backend/tests/test_api_sensors.py`
+- Test: `backend/tests/test_seat_service.py`
 
 **Interfaces:**
-- Consumes: `Seat`、`SeatState`（Task 1）；`Settings.sensor_api_key`（Task 3）。
+- Consumes: `Seat`、`SeatState`（Task 1）。
 - Produces:
-  - `schemas/seat.py`：`SeatStateIn(code: str, is_occupied: bool, ts: datetime | None)`、`SeatStatesIn(states: list[SeatStateIn])`、`ApplyResultOut(applied: int, unknown_codes: list[str])`。
-  - `SeatRepository(db)`：`list_active_seats_by_codes(codes: Iterable[str]) -> list[Seat]`、`get_states(seat_ids: Iterable[int]) -> dict[int, SeatState]`、`add_state(state: SeatState) -> None`、`commit()`。
-  - `SeatService(repo)`：`apply_states(states: list[SeatStateIn], now: datetime | None = None) -> ApplyResultOut`。
-  - `deps.py`：`SeatServiceDep`、`SensorKeyDep`（`Annotated[None, Depends(require_sensor_key)]`）。
+  - `schemas/seat.py`：`SeatReading(code: str, is_occupied: bool, ts: datetime | None = None)`、`ApplyResult(applied: int, unknown_codes: list[str])`、`FloorOccupancyOut`、`CanteenOccupancyOut`（后两者 Task 5 用）。
+  - `SeatRepository(db)`：`list_active_seats_by_codes(codes: Iterable[str]) -> list[Seat]`、`get_states(seat_ids: Iterable[int]) -> dict[int, SeatState]`、`add_state(state: SeatState) -> None`、`commit()`、`list_active_canteens(campus_id) -> list[Canteen]`、`floor_counts(canteen_ids) -> list[tuple[int, int, int, int, datetime | None]]`、`list_active_seats() -> list[tuple[Seat, SeatState | None]]`。
+  - `SeatService(repo)`：`apply_states(readings: list[SeatReading], now: datetime | None = None) -> ApplyResult`。
 
 - [ ] **Step 1: 写失败测试**
 
 ```python
-# backend/tests/test_api_sensors.py
-"""POST /sensors/seat-states：设备用 X-Sensor-Key 鉴权，批量 upsert 座位状态。"""
+# backend/tests/test_seat_service.py
+"""SeatService.apply_states：座位读数 upsert。本期由模拟器调用，将来传感器网关的路由也调它。"""
 
 from datetime import datetime
 
 import pytest
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from app.core.config import get_settings
 from app.models import Campus, Canteen, Seat, SeatState
+from app.repositories.seat_repo import SeatRepository
+from app.schemas.seat import SeatReading
+from app.services.seat_service import SeatService
 
-URL = "/api/v1/sensors/seat-states"
-KEY = {"X-Sensor-Key": "test-sensor-key"}
+T1 = datetime(2026, 11, 10, 4, 0)
+T2 = datetime(2026, 11, 10, 4, 5)
+T3 = datetime(2026, 11, 10, 4, 10)
 
 
 @pytest.fixture
-async def world(engine):
+async def svc(db) -> SeatService:
     """二食堂 1 层三个座位，其中 003 停用。"""
-    factory = async_sessionmaker(engine, expire_on_commit=False)
-    async with factory() as db:
-        canteen = Canteen(name="二食堂", floors=1, campus=Campus(name="主校区"))
-        db.add(canteen)
-        await db.flush()
-        db.add_all(
-            [
-                Seat(canteen_id=canteen.id, floor=1, code="C1-1F-001"),
-                Seat(canteen_id=canteen.id, floor=1, code="C1-1F-002"),
-                Seat(canteen_id=canteen.id, floor=1, code="C1-1F-003", is_active=False),
-            ]
-        )
-        await db.commit()
-        return factory
-
-
-async def _states(factory) -> dict[str, SeatState]:
-    async with factory() as db:
-        rows = (await db.execute(select(Seat.code, SeatState).join(SeatState))).all()
-        return {code: state for code, state in rows}
-
-
-async def test_requires_sensor_key(client, world):
-    r = await client.post(URL, json={"states": [{"code": "C1-1F-001", "is_occupied": True}]})
-    assert r.status_code == 401
-    assert r.json()["code"] == 401
-
-
-async def test_rejects_wrong_key(client, world):
-    r = await client.post(
-        URL,
-        json={"states": [{"code": "C1-1F-001", "is_occupied": True}]},
-        headers={"X-Sensor-Key": "nope"},
-    )
-    assert r.status_code == 401
-
-
-async def test_disabled_when_key_not_configured(client, world):
-    get_settings().sensor_api_key = ""
-    r = await client.post(
-        URL, json={"states": [{"code": "C1-1F-001", "is_occupied": True}]}, headers=KEY
-    )
-    assert r.status_code == 401
-
-
-async def test_upserts_states_and_reports_unknown_codes(client, world):
-    body = {
-        "states": [
-            {"code": "C1-1F-001", "is_occupied": True},
-            {"code": "C1-1F-003", "is_occupied": True},  # 停用座位
-            {"code": "C9-9F-999", "is_occupied": False},  # 不存在
+    canteen = Canteen(name="二食堂", floors=1, campus=Campus(name="主校区"))
+    db.add(canteen)
+    await db.flush()
+    db.add_all(
+        [
+            Seat(canteen_id=canteen.id, floor=1, code="C1-1F-001"),
+            Seat(canteen_id=canteen.id, floor=1, code="C1-1F-002"),
+            Seat(canteen_id=canteen.id, floor=1, code="C1-1F-003", is_active=False),
         ]
-    }
-    r = await client.post(URL, json=body, headers=KEY)
-    assert r.status_code == 200, r.text
-    assert r.json()["data"] == {"applied": 1, "unknown_codes": ["C1-1F-003", "C9-9F-999"]}
-    states = await _states(world)
+    )
+    await db.commit()
+    return SeatService(SeatRepository(db))
+
+
+async def _states(db) -> dict[str, SeatState]:
+    rows = (await db.execute(select(Seat.code, SeatState).join(SeatState))).all()
+    return {code: state for code, state in rows}
+
+
+async def test_upserts_and_reports_unknown_codes(db, svc):
+    result = await svc.apply_states(
+        [
+            SeatReading(code="C1-1F-001", is_occupied=True),
+            SeatReading(code="C1-1F-003", is_occupied=True),  # 停用座位
+            SeatReading(code="C9-9F-999", is_occupied=False),  # 不存在
+        ],
+        now=T1,
+    )
+    assert result.applied == 1
+    assert result.unknown_codes == ["C1-1F-003", "C9-9F-999"]
+    states = await _states(db)
     assert set(states) == {"C1-1F-001"}
     assert states["C1-1F-001"].is_occupied is True
+    assert states["C1-1F-001"].changed_at == states["C1-1F-001"].updated_at == T1
 
 
-async def test_changed_at_only_moves_on_flip(client, world):
-    t1 = "2026-11-10T04:00:00Z"
-    t2 = "2026-11-10T04:05:00Z"
-    t3 = "2026-11-10T04:10:00Z"
-    await client.post(
-        URL, json={"states": [{"code": "C1-1F-001", "is_occupied": True, "ts": t1}]}, headers=KEY
-    )
+async def test_changed_at_only_moves_on_flip(db, svc):
+    await svc.apply_states([SeatReading(code="C1-1F-001", is_occupied=True, ts=T1)])
     # 同状态心跳：updated_at 前进，changed_at 不动
-    await client.post(
-        URL, json={"states": [{"code": "C1-1F-001", "is_occupied": True, "ts": t2}]}, headers=KEY
-    )
-    s = (await _states(world))["C1-1F-001"]
-    assert s.changed_at == datetime(2026, 11, 10, 4, 0)
-    assert s.updated_at == datetime(2026, 11, 10, 4, 5)
+    await svc.apply_states([SeatReading(code="C1-1F-001", is_occupied=True, ts=T2)])
+    s = (await _states(db))["C1-1F-001"]
+    assert s.changed_at == T1
+    assert s.updated_at == T2
     # 翻转：两者都前进
-    await client.post(
-        URL, json={"states": [{"code": "C1-1F-001", "is_occupied": False, "ts": t3}]}, headers=KEY
-    )
-    s = (await _states(world))["C1-1F-001"]
+    await svc.apply_states([SeatReading(code="C1-1F-001", is_occupied=False, ts=T3)])
+    s = (await _states(db))["C1-1F-001"]
     assert s.is_occupied is False
-    assert s.changed_at == s.updated_at == datetime(2026, 11, 10, 4, 10)
+    assert s.changed_at == s.updated_at == T3
 
 
-async def test_timezone_aware_ts_is_stored_as_utc_naive(client, world):
-    r = await client.post(
-        URL,
-        json={"states": [{"code": "C1-1F-001", "is_occupied": True, "ts": "2026-11-10T12:00:00+08:00"}]},
-        headers=KEY,
-    )
-    assert r.status_code == 200, r.text
-    s = (await _states(world))["C1-1F-001"]
-    assert s.updated_at == datetime(2026, 11, 10, 4, 0)
-    assert s.updated_at.tzinfo is None
+async def test_reading_without_ts_uses_now(db, svc):
+    await svc.apply_states([SeatReading(code="C1-1F-002", is_occupied=True)], now=T2)
+    assert (await _states(db))["C1-1F-002"].updated_at == T2
 
 
-async def test_duplicate_code_in_batch_last_one_wins(client, world):
-    body = {
-        "states": [
-            {"code": "C1-1F-001", "is_occupied": True},
-            {"code": "C1-1F-001", "is_occupied": False},
+async def test_duplicate_code_in_batch_last_one_wins(db, svc):
+    result = await svc.apply_states(
+        [
+            SeatReading(code="C1-1F-001", is_occupied=True),
+            SeatReading(code="C1-1F-001", is_occupied=False),
         ]
-    }
-    r = await client.post(URL, json=body, headers=KEY)
-    assert r.json()["data"]["applied"] == 1
-    assert (await _states(world))["C1-1F-001"].is_occupied is False
+    )
+    assert result.applied == 1
+    assert (await _states(db))["C1-1F-001"].is_occupied is False
 
 
-async def test_batch_limit_500(client, world):
-    body = {"states": [{"code": f"X{i}", "is_occupied": True} for i in range(501)]}
-    r = await client.post(URL, json=body, headers=KEY)
-    assert r.status_code == 422
-    assert r.json()["code"] == 422
-
-
-async def test_empty_batch_is_422(client, world):
-    r = await client.post(URL, json={"states": []}, headers=KEY)
-    assert r.status_code == 422
+async def test_empty_batch_is_noop(db, svc):
+    result = await svc.apply_states([])
+    assert result.applied == 0 and result.unknown_codes == []
+    assert await _states(db) == {}
 ```
 
 - [ ] **Step 2: 运行确认失败**
 
-Run: `cd backend && .venv/bin/pytest tests/test_api_sensors.py -q`
-Expected: 全部 404（路由不存在）或 fixture 报错
+Run: `cd backend && .venv/bin/pytest tests/test_seat_service.py -q`
+Expected: ModuleNotFoundError `app.repositories.seat_repo`
 
 - [ ] **Step 3: schema**
 
 ```python
 # backend/app/schemas/seat.py
-"""座位接口的 DTO：传感器上报入参、空位查询出参。"""
+"""座位相关 DTO：读数（模拟器 / 将来的传感器网关 → 服务层）与空位查询出参。"""
 
-from datetime import UTC, datetime
+from datetime import datetime
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel
 
 from app.seating.levels import Level
 
-MAX_BATCH = 500
 
+class SeatReading(BaseModel):
+    """一条座位读数。ts 缺省由服务层取当前 UTC。"""
 
-class SeatStateIn(BaseModel):
-    code: str = Field(min_length=1, max_length=30)
+    code: str
     is_occupied: bool
-    # 缺省取服务器当前 UTC；带时区的值转成 UTC naive 存库
     ts: datetime | None = None
 
-    @field_validator("ts")
-    @classmethod
-    def _to_utc_naive(cls, v: datetime | None) -> datetime | None:
-        if v is not None and v.tzinfo is not None:
-            return v.astimezone(UTC).replace(tzinfo=None)
-        return v
 
-
-class SeatStatesIn(BaseModel):
-    states: list[SeatStateIn] = Field(min_length=1, max_length=MAX_BATCH)
-
-
-class ApplyResultOut(BaseModel):
+class ApplyResult(BaseModel):
     applied: int
     unknown_codes: list[str]
 
@@ -687,6 +619,7 @@ class CanteenOccupancyOut(BaseModel):
 """座位数据访问：按 code 找座位、读写当前状态、按食堂 × 楼层聚合。不含业务判断。"""
 
 from collections.abc import Iterable
+from datetime import datetime
 
 from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -726,7 +659,7 @@ class SeatRepository:
 
     async def floor_counts(
         self, canteen_ids: Iterable[int]
-    ) -> list[tuple[int, int, int, int, object]]:
+    ) -> list[tuple[int, int, int, int, datetime | None]]:
         """每个 (canteen_id, floor) 的 (total, occupied, 最新 updated_at)，只算在用座位。"""
         ids = list(canteen_ids)
         if not ids:
@@ -767,14 +700,18 @@ class SeatRepository:
 
 ```python
 # backend/app/services/seat_service.py
-"""座位服务：传感器上报 upsert、按食堂 × 楼层聚合拥挤度。"""
+"""座位服务：读数写入（upsert seat_state）、按食堂 × 楼层聚合拥挤度。
+
+apply_states 是"传感器网关 → 后端"链路的落点。本期没有上报 HTTP 接口，唯一调用方是
+app/tasks/seat_sim.py 的模拟器；将来接真硬件时加一个路由层调用它即可。
+"""
 
 from datetime import datetime
 
 from app.models import SeatState
 from app.models._mixins import utcnow
 from app.repositories.seat_repo import SeatRepository
-from app.schemas.seat import ApplyResultOut, SeatStateIn
+from app.schemas.seat import ApplyResult, SeatReading
 
 
 class SeatService:
@@ -782,100 +719,58 @@ class SeatService:
         self.repo = repo
 
     async def apply_states(
-        self, states: list[SeatStateIn], now: datetime | None = None
-    ) -> ApplyResultOut:
+        self, readings: list[SeatReading], now: datetime | None = None
+    ) -> ApplyResult:
         """批量 upsert。同批同 code 以最后一条为准；未知/停用 code 收集返回，不整批失败。
 
-        changed_at 只在 is_occupied 翻转时更新，updated_at 每次上报都更新（心跳）。
+        changed_at 只在 is_occupied 翻转时更新，updated_at 每条读数都更新（心跳）。
         """
         now = now or utcnow()
-        latest: dict[str, SeatStateIn] = {}
-        for s in states:
-            latest[s.code] = s
+        latest: dict[str, SeatReading] = {}
+        for r in readings:
+            latest[r.code] = r
 
         seats = {seat.code: seat for seat in await self.repo.list_active_seats_by_codes(latest)}
         unknown = sorted(code for code in latest if code not in seats)
         existing = await self.repo.get_states(seat.id for seat in seats.values())
 
         applied = 0
-        for code, incoming in latest.items():
+        for code, reading in latest.items():
             seat = seats.get(code)
             if seat is None:
                 continue
-            ts = incoming.ts or now
+            ts = reading.ts or now
             state = existing.get(seat.id)
             if state is None:
                 self.repo.add_state(
                     SeatState(
                         seat_id=seat.id,
-                        is_occupied=incoming.is_occupied,
+                        is_occupied=reading.is_occupied,
                         changed_at=ts,
                         updated_at=ts,
                     )
                 )
             else:
-                if state.is_occupied != incoming.is_occupied:
-                    state.is_occupied = incoming.is_occupied
+                if state.is_occupied != reading.is_occupied:
+                    state.is_occupied = reading.is_occupied
                     state.changed_at = ts
                 state.updated_at = ts
             applied += 1
 
         await self.repo.commit()
-        return ApplyResultOut(applied=applied, unknown_codes=unknown)
+        return ApplyResult(applied=applied, unknown_codes=unknown)
 ```
 
-- [ ] **Step 6: deps 与路由**
+- [ ] **Step 6: 运行通过**
 
-`backend/app/api/deps.py`：导入 `secrets`、`Header`、`SeatRepository`、`SeatService`、`get_settings`，加：
+Run: `cd backend && .venv/bin/pytest tests/test_seat_service.py -q && .venv/bin/ruff check app tests`
+Expected: 5 passed
 
-```python
-def get_seat_service(db: DbDep) -> SeatService:
-    return SeatService(SeatRepository(db))
-
-
-def require_sensor_key(x_sensor_key: Annotated[str | None, Header()] = None) -> None:
-    """传感器/网关鉴权：请求头 X-Sensor-Key 必须等于配置项；配置为空视为接口关闭。"""
-    expected = get_settings().sensor_api_key
-    if not expected or x_sensor_key is None:
-        raise AuthError("传感器密钥无效")
-    if not secrets.compare_digest(x_sensor_key.encode(), expected.encode()):
-        raise AuthError("传感器密钥无效")
-
-
-SeatServiceDep = Annotated[SeatService, Depends(get_seat_service)]
-SensorKeyDep = Annotated[None, Depends(require_sensor_key)]
-```
-
-```python
-# backend/app/api/v1/sensors.py
-"""设备侧接口：座位传感器批量上报。鉴权走 X-Sensor-Key，不走用户 JWT。"""
-
-from fastapi import APIRouter
-
-from app.api.deps import SeatServiceDep, SensorKeyDep
-from app.schemas.common import Envelope, ok
-from app.schemas.seat import ApplyResultOut, SeatStatesIn
-
-router = APIRouter(prefix="/sensors")
-
-
-@router.post("/seat-states", response_model=Envelope[ApplyResultOut])
-async def post_seat_states(body: SeatStatesIn, svc: SeatServiceDep, _: SensorKeyDep):
-    return ok(await svc.apply_states(body.states))
-```
-
-`backend/app/api/v1/router.py`：import 列表加 `sensors`，并 `api_router.include_router(sensors.router, tags=["sensors"])`。
-
-- [ ] **Step 7: 运行通过**
-
-Run: `cd backend && .venv/bin/pytest tests/test_api_sensors.py -q && .venv/bin/ruff check app tests`
-Expected: 9 passed
-
-- [ ] **Step 8: 提交**
+- [ ] **Step 7: 提交**
 
 ```bash
-git add backend/app/schemas/seat.py backend/app/repositories/seat_repo.py backend/app/services/seat_service.py backend/app/api/v1/sensors.py backend/app/api/deps.py backend/app/api/v1/router.py backend/tests/test_api_sensors.py
-git commit -m "feat(seat): 传感器批量上报接口 POST /sensors/seat-states（X-Sensor-Key 鉴权）
+git add backend/app/schemas/seat.py backend/app/repositories/seat_repo.py backend/app/services/seat_service.py backend/tests/test_seat_service.py
+git commit -m "feat(seat): 座位读数写入服务 SeatService.apply_states（模拟器 / 将来传感器网关共用）
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ```
@@ -887,11 +782,13 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 **Files:**
 - Modify: `backend/app/services/seat_service.py`
 - Create: `backend/app/api/v1/seats.py`
+- Modify: `backend/app/api/deps.py`
 - Modify: `backend/app/api/v1/router.py`
 - Test: `backend/tests/test_api_seats.py`
 
 **Interfaces:**
 - Consumes: `SeatRepository.list_active_canteens` / `floor_counts`（Task 4）；`level_for` / `occupancy_ratio`（Task 2）；`CurrentUser`（已有）。
+- Produces（deps）：`get_seat_service(db: DbDep) -> SeatService`、`SeatServiceDep = Annotated[SeatService, Depends(get_seat_service)]`。
 - Produces: `SeatService.occupancy(campus_id: int | None) -> list[CanteenOccupancyOut]`；`GET /api/v1/seats/occupancy?campus_id=`。
 
 - [ ] **Step 1: 写失败测试**
@@ -1050,7 +947,17 @@ Expected: 404
         return result
 ```
 
-- [ ] **Step 4: 路由**
+- [ ] **Step 4: 依赖与路由**
+
+`backend/app/api/deps.py`：导入 `SeatRepository`、`SeatService`，加：
+
+```python
+def get_seat_service(db: DbDep) -> SeatService:
+    return SeatService(SeatRepository(db))
+
+
+SeatServiceDep = Annotated[SeatService, Depends(get_seat_service)]
+```
 
 ```python
 # backend/app/api/v1/seats.py
@@ -1074,13 +981,13 @@ async def seat_occupancy(user: CurrentUser, svc: SeatServiceDep, campus_id: int 
 
 - [ ] **Step 5: 运行通过**
 
-Run: `cd backend && .venv/bin/pytest tests/test_api_seats.py tests/test_api_sensors.py -q && .venv/bin/ruff check app tests`
-Expected: 13 passed。若 `updated_at` 断言拿到的是字符串而非 `2026-11-10T04:05:00`，在 `floor_counts` 的 `func.max(...)` 外套 `type_coerce(..., DateTime)`。
+Run: `cd backend && .venv/bin/pytest tests/test_api_seats.py tests/test_seat_service.py -q && .venv/bin/ruff check app tests`
+Expected: 9 passed。若 `updated_at` 断言拿到的是字符串而非 `2026-11-10T04:05:00`，在 `floor_counts` 的 `func.max(...)` 外套 `type_coerce(..., DateTime)`。
 
 - [ ] **Step 6: 提交**
 
 ```bash
-git add backend/app/services/seat_service.py backend/app/api/v1/seats.py backend/app/api/v1/router.py backend/tests/test_api_seats.py
+git add backend/app/services/seat_service.py backend/app/api/v1/seats.py backend/app/api/deps.py backend/app/api/v1/router.py backend/tests/test_api_seats.py
 git commit -m "feat(seat): GET /seats/occupancy 按食堂 × 楼层现算占用率与拥挤度
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
@@ -1272,13 +1179,14 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 
 **Interfaces:**
 - Consumes: `SeatRepository.list_active_seats()`、`SeatService.apply_states()`（Task 4）；`Settings.seat_simulator_enabled` / `seat_sim_interval_seconds`（Task 3）。
+- Consumes（补充）: `SeatReading`（Task 4）。
 - Produces: `target_ratio(beijing_minutes: int) -> float`；`floor_target(beijing_minutes: int, floor: int, rng: random.Random) -> float`；`plan_flips(seats: list[tuple[str, bool]], target: float, rng: random.Random) -> list[tuple[str, bool]]`；`simulate_tick(session, now: datetime | None = None, rng: random.Random | None = None) -> int`（返回 applied 数）。
 
 - [ ] **Step 1: 写失败测试**
 
 ```python
 # backend/tests/test_seat_sim.py
-"""座位模拟器：餐段曲线插值、单 tick 翻转朝目标靠拢且不越界、走传感器同一条写入路径。"""
+"""座位模拟器：餐段曲线插值、单 tick 翻转朝目标靠拢且不越界、走 apply_states 写入。"""
 
 import random
 from datetime import datetime
@@ -1375,8 +1283,8 @@ Expected: ModuleNotFoundError `app.tasks.seat_sim`
 # backend/app/tasks/seat_sim.py
 """座位模拟器：没有真实传感器时，按餐段曲线生成座位进出。
 
-相当于一个内置的假网关：算出要翻转的座位后，走 SeatService.apply_states 写入，
-与真实传感器完全同一条路径。不知道调度器的存在：定时任务、命令行、测试都直接调 simulate_tick。
+扮演"传感器网关"的角色：算出要翻转的座位后，走 SeatService.apply_states 写入；
+将来真硬件接入也会调同一个方法。不知道调度器的存在：定时任务、命令行、测试都直接调 simulate_tick。
 用法：python -m app.tasks.seat_sim
 """
 
@@ -1389,7 +1297,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import SessionLocal
 from app.models._mixins import utcnow
 from app.repositories.seat_repo import SeatRepository
-from app.schemas.seat import SeatStateIn
+from app.schemas.seat import SeatReading
 from app.services.seat_service import SeatService
 
 BEIJING_OFFSET = timedelta(hours=8)
@@ -1485,16 +1393,16 @@ async def simulate_tick(
         by_floor.setdefault((seat.canteen_id, seat.floor), []).append((seat.code, occ))
 
     minutes = _beijing_minutes(now)
-    states: list[SeatStateIn] = []
+    readings: list[SeatReading] = []
     for (_, floor), seats in by_floor.items():
         target = floor_target(minutes, floor, rng)
-        states.extend(
-            SeatStateIn(code=code, is_occupied=occ, ts=now)
+        readings.extend(
+            SeatReading(code=code, is_occupied=occ, ts=now)
             for code, occ in plan_flips(seats, target, rng)
         )
-    if not states:
+    if not readings:
         return 0
-    result = await SeatService(repo).apply_states(states, now=now)
+    result = await SeatService(repo).apply_states(readings, now=now)
     return result.applied
 
 
@@ -1796,14 +1704,10 @@ Expected: `tsc -b` 无错误，vite 构建成功。
 
 - [ ] **Step 7: 本地联调看一眼**
 
-启动 `make dev-api`（`.env` 里 `SEAT_SIMULATOR_ENABLED=true`、`SENSOR_API_KEY=dev-sensor-key`）与 `make dev-web`，登录后打开 `/canteens`：
+启动 `make dev-api`（`.env` 里 `SEAT_SIMULATOR_ENABLED=true`）与 `make dev-web`，登录后打开 `/canteens`：
 - 上方两张食堂卡不变；下方「食堂空位」两张卡，二食堂 3 行、三食堂 2 行。
-- 每行有颜色点、档位中文、`剩 x / y`、进度条；右上「x 秒前更新」每秒变化，5 秒左右数字会跳。
-- 用 `curl` 手动上报验证链路：
-```bash
-curl -s -X POST http://localhost:8000/api/v1/sensors/seat-states -H "X-Sensor-Key: dev-sensor-key" -H "Content-Type: application/json" -d '{"states":[{"code":"C1-1F-001","is_occupied":true}]}'
-```
-返回 `{"code":0,"data":{"applied":1,"unknown_codes":[]},"msg":"ok"}`。
+- 每行有颜色点、档位中文、`剩 x / y`、进度条；右上「x 秒前更新」每秒变化，5 秒左右数字会跳（模拟器每 tick 翻几个座位）。
+- 用无头浏览器（npx 缓存的 playwright）截一张 `/canteens` 页截图确认布局与原型一致。
 
 - [ ] **Step 8: 提交**
 
@@ -1841,38 +1745,20 @@ seat_state  (seat_id PK, is_occupied, changed_at,   -- 最近一次翻转
 每层人数不建表，查询时按 `(canteen_id, floor)` GROUP BY 现算。
 ```
 
-- 6.3 表格后新增「6.3.1 座位」两行：
+- 6.3 表格追加一行：
 
 ```markdown
-| POST | `/sensors/seat-states` | 传感器批量上报，`X-Sensor-Key` 鉴权，单批 ≤ 500，未知 code 返回 `unknown_codes` |
 | GET | `/seats/occupancy?campus_id=` | 每个在营食堂每层的 total / occupied / free / ratio / level（需登录，前端 5 秒轮询） |
 ```
 
-- 第 7 章在 7.5 之后新增：
-
-```markdown
-### 7.6 座位拥挤度分层
-
-占用率 ratio = occupied / total，常量在 `app/seating/levels.py`：
-
-| level | 中文 | ratio |
-|---|---|---|
-| unknown | 暂无数据 | total = 0 |
-| empty | 空闲 | < 0.25 |
-| low | 较少 | 0.25 – 0.50 |
-| medium | 适中 | 0.50 – 0.70 |
-| high | 较多 | 0.70 – 0.85 |
-| full | 爆满 | ≥ 0.85 |
-
-找座难度非线性，高两档区间故意窄。没有真实传感器时由 `app/tasks/seat_sim.py` 按餐段曲线（午 0.90 / 晚 0.85 / 早 0.35 / 其余 0.03–0.08，1 层 ×1.0、2 层 ×0.9、3 层+ ×0.8）模拟进出。
-```
+- 第 7 章 7.6「座位拥挤度与传感器接入」**已在设计阶段写入**（含概念链路、分层阈值、模拟器曲线），本任务只核对内容与实现一致（阈值、曲线、方法名 `SeatService.apply_states`）；不一致处以代码为准改文档。
 
 - [ ] **Step 2: CLAUDE.md**
 
 「当前状态」在「下一步」之前加一条：
 
 ```markdown
-- 已有：食堂空余座位。表 `seat`（静态，`data/seed/seats.csv` 幂等导入，编码 `C{食堂id}-{层}F-{序号}`）+ `seat_state`（当前状态，迁移 c4d5e6f7a8b9），每层人数现算不建表。`POST /sensors/seat-states` 传感器批量上报（`X-Sensor-Key` = `SENSOR_API_KEY`，为空则 401；≤500 条；`changed_at` 只在翻转时动、`updated_at` 每次心跳动；未知/停用 code 进 `unknown_codes`）→ `SeatService.apply_states`。`GET /seats/occupancy?campus_id=`（需登录）按食堂 × 1..floors 列每层 total/occupied/free/ratio/level，阈值在 `app/seating/levels.py`（空闲 <25% / 较少 / 适中 / 较多 / 爆满 ≥85%，无座位 unknown）。模拟器 `app/tasks/seat_sim.py`（`SEAT_SIMULATOR_ENABLED`，每 `SEAT_SIM_INTERVAL_SECONDS`=5 秒一个 tick，按北京时间餐段曲线、每 tick 最多翻 5% 座位 + 1% 随机进出，走 apply_states 同一条路径；`make seat-sim`）。前端 `/canteens` 页下方 `components/SeatOccupancy.tsx`，`useSeatOccupancy` 5 秒轮询。没有做：座位点阵图、历史曲线、`seat_event` 流。
+- 已有：食堂空余座位。表 `seat`（静态，`data/seed/seats.csv` 幂等导入，编码 `C{食堂id}-{层}F-{序号}`）+ `seat_state`（当前状态，迁移 c4d5e6f7a8b9），每层人数现算不建表。**传感器硬件与上报接口只在 `docs/架构设计.md` 7.6 做概念说明，不落码**；读数写入唯一入口 `SeatService.apply_states(readings)`（同批同 code 取最后一条；`changed_at` 只在翻转时动、`updated_at` 每条读数动；未知/停用 code 进 `unknown_codes`），本期只有模拟器调用。`GET /seats/occupancy?campus_id=`（需登录）按食堂 × 1..floors 列每层 total/occupied/free/ratio/level，阈值在 `app/seating/levels.py`（空闲 <25% / 较少 / 适中 / 较多 / 爆满 ≥85%，无座位 unknown）。模拟器 `app/tasks/seat_sim.py`（`SEAT_SIMULATOR_ENABLED`，每 `SEAT_SIM_INTERVAL_SECONDS`=5 秒一个 tick，按北京时间餐段曲线、每 tick 最多翻 5% 座位 + 1% 随机进出，走 apply_states 同一条路径；`make seat-sim`）。前端 `/canteens` 页下方 `components/SeatOccupancy.tsx`，`useSeatOccupancy` 5 秒轮询。没有做：`/sensors` 上报接口与设备鉴权、座位点阵图、历史曲线、`seat_event` 流。
 ```
 
 - [ ] **Step 3: 全量验证**

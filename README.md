@@ -60,8 +60,9 @@ make dev-web                # 终端 2：前端  http://localhost:5173
 | `make test` / `make lint` | 后端 pytest / ruff |
 | `make migrate` | 升级数据库到最新迁移 |
 | `make migration m="说明"` | 改了模型后生成迁移脚本 |
-| `make seed` | 导入预设标签与菜品 CSV |
+| `make seed` | 导入预设标签、菜品 CSV 与座位 CSV |
 | `make rankings` | 手动重算 stats 并生成榜单快照 |
+| `make seat-sim` | 手动跑一个座位模拟 tick（服务运行时每 5 秒自动跑） |
 | `make up` / `make down` / `make logs` | Docker 整套起停 |
 | `cd frontend && npx tsc -b && npm run build` | 前端类型检查与构建 |
 
@@ -75,6 +76,7 @@ make dev-web                # 终端 2：前端  http://localhost:5173
 | `AUTH_CODE_REQUIRED` | `false` = 邮件服务关闭，输入校园邮箱按回车直接登录，不发验证码（内测/演示用，**身份未验证**）；接上邮件服务后改回 `true` |
 | `AUTH_ECHO_CODE` | 需要验证码但没有邮件服务时的开发模式：验证码直接回传在接口响应里，**生产必须 false** |
 | `SCHEDULER_ENABLED` / `RANKING_INTERVAL_MINUTES` | 榜单定时任务开关与间隔 |
+| `SEAT_SIMULATOR_ENABLED` / `SEAT_SIM_INTERVAL_SECONDS` | 座位模拟器（没有真实传感器时按餐段曲线模拟座位进出）开关与间隔，默认关 / 5 秒 |
 | `WEB_PORT` | Docker 对外端口，默认 80 |
 
 ## 目录

@@ -16,6 +16,8 @@ services:
       SCHEDULER_ENABLED: "true"
       SEED_DEMO_REVIEWS: ${SEED_DEMO_REVIEWS:-false}   # 演示：空库时写入一批演示评价
       RANKING_INTERVAL_MINUTES: ${RANKING_INTERVAL_MINUTES:-10}
+      SEAT_SIMULATOR_ENABLED: ${SEAT_SIMULATOR_ENABLED:-true}   # 演示：模拟座位进出
+      SEAT_SIM_INTERVAL_SECONDS: ${SEAT_SIM_INTERVAL_SECONDS:-5}
     restart: unless-stopped
 
   web:

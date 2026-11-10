@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     # 单容器部署：前端构建产物目录，非空则由 FastAPI 托管并做 SPA 回退
     static_dir: str | None = None
     ranking_interval_minutes: int = 10
+    # 座位模拟器：没有真实传感器时扮演网关，按餐段曲线生成座位进出（演示用）
+    seat_simulator_enabled: bool = False
+    seat_sim_interval_seconds: int = 5
 
     @property
     def allowed_email_domain_list(self) -> list[str]:

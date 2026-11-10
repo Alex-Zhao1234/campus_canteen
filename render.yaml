@@ -27,3 +27,7 @@ services:
         value: none
       - key: SEED_DEMO_REVIEWS
         value: "true"         # 评价表为空时写入演示评价，榜单一打开就有内容
+      - key: SEAT_SIMULATOR_ENABLED
+        value: "true"         # 没有真实传感器，模拟座位进出
+      - key: SEAT_SIM_INTERVAL_SECONDS
+        value: "5"

@@ -10,12 +10,23 @@ from app.main import app
 
 @pytest.fixture(autouse=True)
 def _pinned_settings():
-    """测试不受本地 .env 影响：固定认证相关开关，用完还原。"""
+    """测试不受本地 .env 影响：固定认证/调度/模拟器开关，用完还原。"""
     s = get_settings()
-    saved = (s.auth_code_required, s.auth_echo_code, s.scheduler_enabled)
-    s.auth_code_required, s.auth_echo_code, s.scheduler_enabled = True, True, False
+    saved = (
+        s.auth_code_required,
+        s.auth_echo_code,
+        s.scheduler_enabled,
+        s.seat_simulator_enabled,
+    )
+    s.auth_code_required, s.auth_echo_code = True, True
+    s.scheduler_enabled, s.seat_simulator_enabled = False, False
     yield
-    s.auth_code_required, s.auth_echo_code, s.scheduler_enabled = saved
+    (
+        s.auth_code_required,
+        s.auth_echo_code,
+        s.scheduler_enabled,
+        s.seat_simulator_enabled,
+    ) = saved
 
 
 @pytest.fixture

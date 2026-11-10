@@ -2,6 +2,7 @@
 
 from app.models.org import Campus, Canteen, Dish, Stall
 from app.models.review import MEAL_SLOTS, VERDICTS, Review, ReviewTag, Tag
+from app.models.seat import Seat, SeatState
 from app.models.stats import RANKING_TYPES, DishStats, RankingSnapshot, StallStats
 from app.models.user import User
 
@@ -16,6 +17,8 @@ __all__ = [
     "RankingSnapshot",
     "Review",
     "ReviewTag",
+    "Seat",
+    "SeatState",
     "Stall",
     "StallStats",
     "Tag",

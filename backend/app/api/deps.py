@@ -13,6 +13,7 @@ from app.repositories.org_repo import OrgRepository
 from app.repositories.ranking_repo import RankingRepository
 from app.repositories.recommend_repo import RecommendRepository
 from app.repositories.review_repo import ReviewRepository
+from app.repositories.seat_repo import SeatRepository
 from app.repositories.user_repo import UserRepository
 from app.services.auth_service import AuthService
 from app.services.errors import AuthError
@@ -20,6 +21,7 @@ from app.services.org_service import OrgService
 from app.services.ranking_service import RankingService
 from app.services.recommend_service import RecommendService
 from app.services.review_service import ReviewService
+from app.services.seat_service import SeatService
 
 DbDep = Annotated[AsyncSession, Depends(get_db)]
 
@@ -42,6 +44,10 @@ def get_ranking_service(db: DbDep) -> RankingService:
 
 def get_recommend_service(db: DbDep) -> RecommendService:
     return RecommendService(RecommendRepository(db), OrgRepository(db))
+
+
+def get_seat_service(db: DbDep) -> SeatService:
+    return SeatService(SeatRepository(db))
 
 
 # auto_error=False：没带头时自己抛 AuthError，保证走统一响应壳
@@ -86,3 +92,4 @@ RankingServiceDep = Annotated[RankingService, Depends(get_ranking_service)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
 OptionalUser = Annotated[User | None, Depends(get_optional_user)]
 RecommendServiceDep = Annotated[RecommendService, Depends(get_recommend_service)]
+SeatServiceDep = Annotated[SeatService, Depends(get_seat_service)]

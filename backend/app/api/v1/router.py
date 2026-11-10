@@ -9,6 +9,7 @@ from app.api.v1 import (
     rankings,
     recommend,
     reviews,
+    seats,
     stalls,
     tags,
 )
@@ -24,3 +25,4 @@ api_router.include_router(reviews.router, tags=["reviews"])
 api_router.include_router(tags.router, tags=["tags"])
 api_router.include_router(rankings.router, tags=["rankings"])
 api_router.include_router(recommend.router, tags=["recommend"])
+api_router.include_router(seats.router, tags=["seats"])

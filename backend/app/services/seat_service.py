@@ -9,7 +9,13 @@ from datetime import datetime
 from app.models import SeatState
 from app.models._mixins import utcnow
 from app.repositories.seat_repo import SeatRepository
-from app.schemas.seat import ApplyResult, SeatReading
+from app.schemas.seat import (
+    ApplyResult,
+    CanteenOccupancyOut,
+    FloorOccupancyOut,
+    SeatReading,
+)
+from app.seating.levels import level_for, occupancy_ratio
 
 
 class SeatService:
@@ -57,3 +63,37 @@ class SeatService:
 
         await self.repo.commit()
         return ApplyResult(applied=applied, unknown_codes=unknown)
+
+    async def occupancy(self, campus_id: int | None = None) -> list[CanteenOccupancyOut]:
+        """每个在营食堂按 1..floors 列出每层；有座位但超出 floors 的层也列出。"""
+        canteens = await self.repo.list_active_canteens(campus_id)
+        counts = {
+            (cid, floor): (total, occupied, updated_at)
+            for cid, floor, total, occupied, updated_at in await self.repo.floor_counts(
+                c.id for c in canteens
+            )
+        }
+        result: list[CanteenOccupancyOut] = []
+        for c in canteens:
+            seat_floors = [f for (cid, f) in counts if cid == c.id]
+            top = max([c.floors, *seat_floors])
+            levels = []
+            for floor in range(1, top + 1):
+                total, occupied, updated_at = counts.get((c.id, floor), (0, 0, None))
+                levels.append(
+                    FloorOccupancyOut(
+                        floor=floor,
+                        total=total,
+                        occupied=occupied,
+                        free=total - occupied,
+                        ratio=occupancy_ratio(occupied, total),
+                        level=level_for(occupied, total),
+                        updated_at=updated_at,
+                    )
+                )
+            result.append(
+                CanteenOccupancyOut(
+                    canteen_id=c.id, canteen_name=c.name, floors=c.floors, levels=levels
+                )
+            )
+        return result

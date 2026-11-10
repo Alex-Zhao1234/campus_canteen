@@ -11,6 +11,8 @@ from app.tasks.rankings import rebuild_rankings
 from app.tasks.seat_sim import simulate_tick
 
 log = logging.getLogger(__name__)
+# 模拟器每 5 秒一个 tick，APScheduler 执行器默认每次打两行 INFO 会刷爆日志；任务自身日志照常
+logging.getLogger("apscheduler.executors.default").setLevel(logging.WARNING)
 scheduler = AsyncIOScheduler()
 
 

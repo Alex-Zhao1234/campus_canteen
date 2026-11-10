@@ -59,7 +59,8 @@ export function SeatOccupancy() {
   }, []);
 
   if (isLoading) return <p className="state">加载空位中…</p>;
-  if (error) return <p className="state state-error">空位数据暂时不可用</p>;
+  // 后台刷新失败时保留上一次数据继续显示（头部"x 秒前更新"会自然变旧），只有从未拿到数据才报错
+  if (error && !data) return <p className="state state-error">空位数据暂时不可用</p>;
   if (!data?.length) return null;
 
   return (

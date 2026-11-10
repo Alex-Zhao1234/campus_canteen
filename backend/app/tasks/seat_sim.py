@@ -80,8 +80,8 @@ def plan_flips(
         for c in rng.sample(occupied, min(step, len(occupied))):
             flips[c] = False
 
-    # 随机进出：高峰时也有人起身、有人坐下
-    churn = int(total * CHURN_SHARE)
+    # 随机进出：高峰时也有人起身、有人坐下；小楼层也至少 1 个，否则到达目标后就"死"了
+    churn = max(1, round(total * CHURN_SHARE))
     remaining = [(c, occ) for c, occ in seats if c not in flips]
     for c, occ in rng.sample(remaining, min(churn, len(remaining))):
         flips[c] = not occ

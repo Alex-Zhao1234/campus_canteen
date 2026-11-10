@@ -55,6 +55,22 @@ def test_plan_flips_at_target_only_churns():
     assert len(flips) == 1  # 1% 随机进出
 
 
+def test_plan_flips_small_floor_still_churns():
+    # 80 座的楼层（二食堂 3 层）到达目标后也要有人进出，1% 向上取整至少 1 个
+    rng = random.Random(5)
+    seats = [(f"S{i:03d}", i < 40) for i in range(80)]
+    assert len(plan_flips(seats, 0.5, rng)) == 1
+
+
+def test_plan_flips_moves_down_when_over_target():
+    rng = random.Random(9)
+    seats = [(f"S{i:03d}", True) for i in range(100)]  # 全满，凌晨目标 3%
+    flips = plan_flips(seats, 0.03, rng)
+    # 5% 朝目标 + 1% 随机进出（全满时随机进出只能是有人起身），全部是"离开"
+    assert len(flips) == 6
+    assert all(not occ for _, occ in flips)
+
+
 def test_plan_flips_handles_empty_floor():
     assert plan_flips([], 0.9, random.Random(0)) == []
 
@@ -73,8 +89,8 @@ async def test_simulate_tick_writes_states_via_service(db):
     occupied = await db.scalar(
         select(func.count()).select_from(SeatState).where(SeatState.is_occupied.is_(True))
     )
-    # 40 座 × 5% = 2 个朝目标，随机进出 int(40*0.01)=0 个
-    assert 1 <= occupied <= 2
+    # 40 座 × 5% = 2 个朝目标，随机进出 ceil(40*0.01)=1 个（全空时只能坐上）
+    assert occupied == 3
     # 停用座位不会被写入
     off_id = await db.scalar(select(Seat.id).where(Seat.code == "C1-1F-OFF"))
     assert await db.scalar(select(SeatState).where(SeatState.seat_id == off_id)) is None

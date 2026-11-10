@@ -13,9 +13,12 @@ from app.schemas.seat import (
     ApplyResult,
     CanteenOccupancyOut,
     FloorOccupancyOut,
+    SeatDotOut,
+    SeatMapOut,
     SeatReading,
 )
-from app.seating.levels import level_for, occupancy_ratio
+from app.seating.levels import SEAT_GRID_COLS, level_for, occupancy_ratio
+from app.services.errors import NotFoundError
 
 
 class SeatService:
@@ -97,3 +100,23 @@ class SeatService:
                 )
             )
         return result
+
+    async def floor_map(self, canteen_id: int, floor: int) -> SeatMapOut:
+        """某层座位平面图。食堂不存在/停用 404；该层没有座位返回空列表。"""
+        if await self.repo.get_active_canteen(canteen_id) is None:
+            raise NotFoundError("食堂", canteen_id)
+        rows = await self.repo.list_floor_seats(canteen_id, floor)
+        seats = [
+            SeatDotOut(code=seat.code, is_occupied=bool(state.is_occupied) if state else False)
+            for seat, state in rows
+        ]
+        updated = [state.updated_at for _, state in rows if state is not None]
+        return SeatMapOut(
+            canteen_id=canteen_id,
+            floor=floor,
+            cols=SEAT_GRID_COLS,
+            total=len(seats),
+            occupied=sum(1 for s in seats if s.is_occupied),
+            updated_at=max(updated) if updated else None,
+            seats=seats,
+        )

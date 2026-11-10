@@ -16,6 +16,9 @@ LEVEL_THRESHOLDS: tuple[tuple[float, Level], ...] = (
     (0.85, "high"),
 )
 
+# 座位平面图每行座位数：所有楼层都是"宽 10"，座位在图中的位置 = 它在该层的序号
+SEAT_GRID_COLS = 10
+
 LEVEL_LABELS: dict[Level, str] = {
     "unknown": "暂无数据",
     "empty": "空闲",

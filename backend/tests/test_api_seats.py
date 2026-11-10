@@ -119,3 +119,65 @@ async def test_unknown_campus_returns_empty_list(client, world):
     r = await client.get(URL, params={"campus_id": 9999}, headers=await _auth(client))
     assert r.status_code == 200
     assert r.json()["data"] == []
+
+
+# ---------- GET /seats/map：某食堂某层的座位平面图 ----------
+
+MAP_URL = "/api/v1/seats/map"
+
+
+async def test_map_requires_login(client, world):
+    r = await client.get(MAP_URL, params={"canteen_id": world["c2_id"], "floor": 1})
+    assert r.status_code == 401
+
+
+async def test_map_lists_active_seats_in_code_order_with_occupancy(client, world):
+    headers = await _auth(client)
+    r = await client.get(
+        MAP_URL, params={"canteen_id": world["c2_id"], "floor": 1}, headers=headers
+    )
+    assert r.status_code == 200, r.text
+    data = r.json()["data"]
+    assert data["canteen_id"] == world["c2_id"] and data["floor"] == 1
+    assert data["cols"] == 10
+    # 停用的 005 不出现；004 有记录且空；顺序按编码
+    assert [s["code"] for s in data["seats"]] == [
+        "C1-1F-001",
+        "C1-1F-002",
+        "C1-1F-003",
+        "C1-1F-004",
+    ]
+    assert [s["is_occupied"] for s in data["seats"]] == [True, True, True, False]
+    assert data["total"] == 4 and data["occupied"] == 3
+    assert data["updated_at"] == "2026-11-10T04:05:00"
+
+
+async def test_map_seats_without_state_are_free(client, world):
+    headers = await _auth(client)
+    r = await client.get(
+        MAP_URL, params={"canteen_id": world["c2_id"], "floor": 2}, headers=headers
+    )
+    data = r.json()["data"]
+    assert [s["is_occupied"] for s in data["seats"]] == [False, False]
+    assert data["occupied"] == 0 and data["updated_at"] is None
+
+
+async def test_map_empty_floor_returns_empty_list(client, world):
+    headers = await _auth(client)
+    r = await client.get(
+        MAP_URL, params={"canteen_id": world["c2_id"], "floor": 3}, headers=headers
+    )
+    assert r.status_code == 200
+    assert r.json()["data"]["seats"] == [] and r.json()["data"]["total"] == 0
+
+
+async def test_map_unknown_or_inactive_canteen_is_404(client, world):
+    headers = await _auth(client)
+    r = await client.get(MAP_URL, params={"canteen_id": 9999, "floor": 1}, headers=headers)
+    assert r.status_code == 404
+    assert "食堂" in r.json()["msg"]
+    # 停用的三食堂同样 404
+    c3_id = world["c2_id"] + 1
+    r = await client.get(MAP_URL, params={"canteen_id": c3_id, "floor": 1}, headers=headers)
+    assert r.status_code == 404
+    assert "食堂" in r.json()["msg"]

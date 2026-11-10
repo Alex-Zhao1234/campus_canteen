@@ -33,6 +33,22 @@ class SeatRepository:
     async def commit(self) -> None:
         await self.db.commit()
 
+    async def get_active_canteen(self, canteen_id: int) -> Canteen | None:
+        stmt = select(Canteen).where(Canteen.id == canteen_id, Canteen.is_active.is_(True))
+        return await self.db.scalar(stmt)
+
+    async def list_floor_seats(
+        self, canteen_id: int, floor: int
+    ) -> list[tuple[Seat, SeatState | None]]:
+        """某层全部在用座位及其状态，按编码排序（编码三位补零，字典序即数字序）。"""
+        stmt = (
+            select(Seat, SeatState)
+            .outerjoin(SeatState, SeatState.seat_id == Seat.id)
+            .where(Seat.canteen_id == canteen_id, Seat.floor == floor, Seat.is_active.is_(True))
+            .order_by(Seat.code)
+        )
+        return [(seat, state) for seat, state in (await self.db.execute(stmt)).all()]
+
     async def list_active_canteens(self, campus_id: int | None) -> list[Canteen]:
         stmt = select(Canteen).where(Canteen.is_active.is_(True)).order_by(Canteen.id)
         if campus_id is not None:

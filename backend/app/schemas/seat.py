@@ -35,3 +35,20 @@ class CanteenOccupancyOut(BaseModel):
     canteen_name: str
     floors: int
     levels: list[FloorOccupancyOut]
+
+
+class SeatDotOut(BaseModel):
+    code: str
+    is_occupied: bool
+
+
+class SeatMapOut(BaseModel):
+    """某食堂某层的座位平面图：seats 按编码顺序，前端按 cols 列铺成网格。"""
+
+    canteen_id: int
+    floor: int
+    cols: int
+    total: int
+    occupied: int
+    updated_at: datetime | None
+    seats: list[SeatDotOut]

@@ -239,11 +239,21 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .seat-card-head strong small { color: var(--muted); font-weight: 400; margin-left: .35rem; }
 .seat-card-head > small { color: var(--muted); font-size: .75rem; font-variant-numeric: tabular-nums; }
 .seat-floors { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .45rem; }
-.seat-floor {
-  --tone: var(--muted);
+/* 与顶栏 .brand 同字号字重，左边距同为 1rem，上下对齐 */
+.seat-title { margin: 1.25rem 0 .5rem; font-size: 1.1rem; font-weight: 700; color: var(--fg); }
+.seat-floor { --tone: var(--muted); }
+.seat-floor-row {
+  width: 100%; text-align: left; padding: 0; border-radius: .4rem;
   display: grid; grid-template-columns: 2.4rem .6rem 4rem 1fr; grid-template-rows: auto auto;
   align-items: center; column-gap: .4rem; row-gap: .3rem; font-size: .9rem;
 }
+.seat-floor-row:active { background: color-mix(in srgb, var(--fg) 6%, transparent); }
+.seat-chevron {
+  display: inline-block; width: .45rem; height: .45rem; margin-left: .5rem; vertical-align: .1rem;
+  border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted);
+  transform: rotate(45deg); transition: transform .2s;
+}
+.seat-floor.open .seat-chevron { transform: rotate(-135deg); vertical-align: -.15rem; }
 .seat-floor-name { font-weight: 600; }
 .seat-dot { width: .6rem; height: .6rem; border-radius: 50%; background: var(--tone); }
 .seat-level { color: var(--tone); font-weight: 600; }
@@ -258,3 +268,14 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .level-high { --tone: #e8761e; }
 .level-full { --tone: var(--bad); }
 .level-unknown { --tone: var(--muted); }
+
+/* 座位平面图 */
+.seat-map { margin: .5rem 0 .25rem; padding: .75rem; border-radius: .6rem; background: var(--bg); }
+.seat-map-state { margin: .4rem 0; font-size: .8rem; color: var(--muted); text-align: center; }
+.seat-legend { display: flex; gap: 1rem; margin-bottom: .6rem; font-size: .75rem; color: var(--muted); }
+.seat-legend span { display: inline-flex; align-items: center; gap: .3rem; }
+.seat-dot-sm { width: .55rem; height: .55rem; border-radius: 50%; }
+.seat-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: .45rem .3rem; justify-items: center; }
+.seat-circle { width: 14px; height: 14px; border-radius: 50%; transition: background .6s ease, border-color .6s ease; }
+.seat-circle.free, .seat-dot-sm.free { background: color-mix(in srgb, var(--good) 22%, transparent); border: 2px solid var(--good); }
+.seat-circle.busy, .seat-dot-sm.busy { background: var(--bad); border: 2px solid var(--bad); }

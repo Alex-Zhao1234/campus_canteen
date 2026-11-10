@@ -220,3 +220,19 @@ export interface CanteenOccupancy {
   floors: number;
   levels: FloorOccupancy[];
 }
+
+export interface SeatDot {
+  code: string;
+  is_occupied: boolean;
+}
+
+/** 某食堂某层的座位平面图：seats 按编码顺序，按 cols 列铺成网格 */
+export interface SeatMap {
+  canteen_id: number;
+  floor: number;
+  cols: number;
+  total: number;
+  occupied: number;
+  updated_at: string | null;
+  seats: SeatDot[];
+}

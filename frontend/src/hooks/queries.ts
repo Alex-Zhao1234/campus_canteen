@@ -16,6 +16,7 @@ export const keys = {
   tags: ["tags"] as const,
   myReviews: ["me", "reviews"] as const,
   seatOccupancy: ["seats", "occupancy"] as const,
+  seatMap: (canteenId: number, floor: number) => ["seats", "map", canteenId, floor] as const,
   ranking: (type: RankingType, canteenId: number | null) =>
     ["rankings", type, canteenId] as const,
 };
@@ -56,5 +57,15 @@ export const useSeatOccupancy = () =>
     queryKey: keys.seatOccupancy,
     queryFn: seatsApi.occupancy,
     refetchInterval: 5000,
+    refetchIntervalInBackground: false,
+  });
+
+/** 某层座位平面图：只在展开时请求（enabled），同样 5 秒轮询 */
+export const useSeatMap = (canteenId: number, floor: number, enabled: boolean) =>
+  useQuery({
+    queryKey: keys.seatMap(canteenId, floor),
+    queryFn: () => seatsApi.map(canteenId, floor),
+    enabled,
+    refetchInterval: enabled ? 5000 : false,
     refetchIntervalInBackground: false,
   });
